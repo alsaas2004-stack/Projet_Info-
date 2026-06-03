@@ -5,8 +5,6 @@ Documentation de la conception de la base de données : modèle conceptuel (MCD)
 
 ## MCD — Modèle Conceptuel de Données
 
-> Glisse ici l'image exportée depuis draw.io (remplace le nom du fichier si besoin).
-
 ![Schéma MCD IcamTrack](MCD.png)
 
 ### Les 5 entités
