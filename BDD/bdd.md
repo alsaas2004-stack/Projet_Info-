@@ -42,17 +42,6 @@ Documentation de la conception de la base de données : modèle conceptuel (MCD)
 - date_action
 - commentaire
 
-### Les 5 associations et leurs cardinalités
-
-| Association | Entité A | Entité B |
-|---|---|---|
-| Appartenir | MATERIEL (1,1) | CATEGORIE (0,n) |
-| Concerner | EMPRUNT (1,1) | MATERIEL (0,n) |
-| Effectuer | EMPRUNT (1,1) | UTILISATEUR (0,n) |
-| Tracer | HISTORIQUE (1,1) | MATERIEL (0,n) |
-| Déclencher | HISTORIQUE (1,1) | UTILISATEUR (0,n) |
-
----
 
 ## MLD — Modèle Logique de Données
 
