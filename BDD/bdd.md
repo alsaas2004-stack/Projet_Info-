@@ -2,7 +2,6 @@
 
 Documentation de la conception de la base de données : modèle conceptuel (MCD) et modèle logique (MLD).
 
----
 
 ## MCD — Modèle Conceptuel de Données
 
