@@ -7,37 +7,6 @@ Documentation de la conception de la base de données : modèle conceptuel (MCD)
 
 ![Schéma MCD IcamTrack](MCD.png)
 
-### Les 5 entités
-
-**CATEGORIE**
-- _id_categorie_ (identifiant)
-- nom_categorie
-
-**MATERIEL**
-- _id_materiel_ (identifiant)
-- nom
-- reference
-- description
-- etat
-
-**UTILISATEUR**
-- _id_utilisateur_ (identifiant)
-- nom
-- email
-- role
-
-**EMPRUNT**
-- _id_emprunt_ (identifiant)
-- date_emprunt
-- date_retour_prevue
-- date_retour_reelle
-- statut
-
-**HISTORIQUE**
-- _id_historique_ (identifiant)
-- type_action
-- date_action
-- commentaire
 
 
 ## MLD — Modèle Logique de Données
