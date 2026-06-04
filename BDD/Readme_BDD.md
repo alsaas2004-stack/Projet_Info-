@@ -17,15 +17,6 @@ Documentation de la conception de la base de données : modèle conceptuel (MCD)
 
 Notation : la clé primaire est soulignée, les clés étrangères sont précédées de `#`.
 
-**CATEGORIE** ( _id_categorie_, nom_categorie )
-
-**UTILISATEUR** ( _id_utilisateur_, nom, email, role )
-
-**MATERIEL** ( _id_materiel_, nom, reference, description, etat, #id_categorie )
-
-**EMPRUNT** ( _id_emprunt_, date_emprunt, date_retour_prevue, date_retour_reelle, statut, #id_materiel, #id_utilisateur )
-
-**HISTORIQUE** ( _id_historique_, type_action, date_action, commentaire, #id_materiel, #id_utilisateur )
 
 ### Détail des tables
 
