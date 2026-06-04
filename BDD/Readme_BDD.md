@@ -63,14 +63,7 @@ Notation : la clé primaire est soulignée, les clés étrangères sont précéd
 | id_materiel | uuid | FK |
 | id_utilisateur | uuid | FK |
 
-### Liens entre les tables
-- `CATEGORIE.id_categorie` (1) → (∞) `MATERIEL.id_categorie`
-- `MATERIEL.id_materiel` (1) → (∞) `EMPRUNT.id_materiel`
-- `UTILISATEUR.id_utilisateur` (1) → (∞) `EMPRUNT.id_utilisateur`
-- `MATERIEL.id_materiel` (1) → (∞) `HISTORIQUE.id_materiel`
-- `UTILISATEUR.id_utilisateur` (1) → (∞) `HISTORIQUE.id_utilisateur`
 
----
 
 ## Notes de conception
 
