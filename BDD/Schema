@@ -1,44 +1,52 @@
 -- =========================================================
 -- IcamTrack - Script de création de la base de données
 -- =========================================================
-
+ 
 -- 1. Catégories
 create table categorie (
   id_categorie   uuid primary key default gen_random_uuid(),
   nom_categorie  text not null
 );
-
+ 
 -- 2. Utilisateurs
 create table utilisateur (
   id_utilisateur uuid primary key default gen_random_uuid(),
   nom            text not null,
   email          text unique,
-  role           text not null default 'etudiant'
+  role           text not null default 'etudiant',
+  actif          boolean not null default true,
+  telephone      text
 );
-
+ 
 -- 3. Matériel
 create table materiel (
-  id_materiel    uuid primary key default gen_random_uuid(),
-  nom            text not null,
-  reference      text,
-  description    text,
-  etat           text not null default 'disponible'
-                 check (etat in ('disponible', 'emprunte', 'indisponible')),
-  id_categorie   uuid references categorie (id_categorie)
+  id_materiel      uuid primary key default gen_random_uuid(),
+  nom              text not null,
+  reference        text,
+  description      text,
+  etat             text not null default 'disponible'
+                   check (etat in ('disponible', 'emprunte', 'indisponible')),
+  image_url        text,
+  date_acquisition timestamp,
+  actif            boolean not null default true,
+  id_categorie     uuid references categorie (id_categorie)
 );
-
+ 
 -- 4. Emprunts
 create table emprunt (
   id_emprunt          uuid primary key default gen_random_uuid(),
   date_emprunt        timestamp not null default now(),
   date_retour_prevue  timestamp,
   date_retour_reelle  timestamp,
-  statut              text not null default 'en_cours'
-                      check (statut in ('en_cours', 'rendu')),
+  statut              text not null default 'en_attente'
+                      check (statut in ('en_attente', 'accepte', 'refuse', 'en_cours', 'rendu')),
+  motif_refus         text,
+  date_validation     timestamp,
   id_materiel         uuid not null references materiel (id_materiel),
-  id_utilisateur      uuid not null references utilisateur (id_utilisateur)
+  id_utilisateur      uuid not null references utilisateur (id_utilisateur),
+  valide_par          uuid references utilisateur (id_utilisateur)
 );
-
+ 
 -- 5. Historique
 create table historique (
   id_historique  uuid primary key default gen_random_uuid(),
@@ -48,3 +56,15 @@ create table historique (
   id_materiel    uuid references materiel (id_materiel),
   id_utilisateur uuid references utilisateur (id_utilisateur)
 );
+ 
+-- 6. Notifications
+create table notification (
+  id_notification uuid primary key default gen_random_uuid(),
+  type_notif      text not null,
+  message         text,
+  lu              boolean not null default false,
+  date_creation   timestamp not null default now(),
+  id_utilisateur  uuid not null references utilisateur (id_utilisateur),
+  id_emprunt      uuid references emprunt (id_emprunt)
+);
+ 
