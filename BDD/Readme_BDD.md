@@ -11,8 +11,6 @@ Documentation de la conception de la base de données : modèle conceptuel (MCD)
 
 ## MLD — Modèle Logique de Données
 
-> Glisse ici l'image exportée depuis draw.io.
-
 ![Schéma MLD IcamTrack](MLD.png)
 
 Notation : la clé primaire est soulignée, les clés étrangères sont précédées de `#`.
