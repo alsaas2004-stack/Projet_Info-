@@ -52,14 +52,14 @@ export default function Categories() {
   }
 
   if (!estAdmin) return (
-    <div className="p-8">
+    <div className="p-4 sm:p-8">
       <p className="text-slate-500 text-sm">Accès réservé aux administrateurs.</p>
     </div>
   )
 
   return (
-    <div className="p-8">
-      <div className="h-1 bg-gradient-to-r from-orange-300 via-orange-500 to-orange-700 -mx-8 -mt-8 mb-8" />
+    <div className="p-4 sm:p-8">
+      <div className="h-1 bg-gradient-to-r from-orange-300 via-orange-500 to-orange-700 -mx-4 -mt-4 sm:-mx-8 sm:-mt-8 mb-8" />
 
       <div className="mb-8 flex items-center justify-between">
         <div>
@@ -117,6 +117,7 @@ export default function Categories() {
             <p className="text-sm">Aucune catégorie — créez-en une</p>
           </div>
         ) : (
+          <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50">
@@ -196,6 +197,7 @@ export default function Categories() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
     </div>

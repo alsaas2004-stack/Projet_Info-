@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import {
   FiHome, FiBox, FiTag, FiClipboard,
-  FiClock, FiBell, FiUsers, FiLogOut, FiPackage
+  FiClock, FiBell, FiUsers, FiLogOut, FiPackage, FiMenu, FiX
 } from 'react-icons/fi'
 
 // Petits arcs décoratifs pour le header sidebar
@@ -34,6 +34,7 @@ export default function MainLayout() {
   const { profil, profilErreur, estAdmin, estSuperAdmin, logout } = useAuth()
   const navigate = useNavigate()
   const [nbNotifs, setNbNotifs] = useState(0)
+  const [menuOuvert, setMenuOuvert] = useState(false)
 
   useEffect(() => {
     if (!profil?.id_utilisateur) return
@@ -68,11 +69,46 @@ export default function MainLayout() {
     { to: '/notifications', icon: FiBell,      label: 'Notifications', badge: nbNotifs },
   ]
 
+  function fermerMenu() {
+    setMenuOuvert(false)
+  }
+
   return (
     <div className="flex min-h-screen bg-slate-50">
 
+      {/* ── Barre mobile (hamburger) ── */}
+      <div className="lg:hidden fixed top-0 inset-x-0 z-30 bg-slate-900 flex items-center justify-between px-4 py-3 shadow-lg">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
+            <FiPackage size={16} className="text-white" />
+          </div>
+          <span className="text-white font-extrabold text-base tracking-tight">IcamTrack</span>
+        </div>
+        <button
+          onClick={() => setMenuOuvert(o => !o)}
+          className="p-2 rounded-xl text-white hover:bg-slate-800 transition cursor-pointer relative"
+        >
+          {menuOuvert ? <FiX size={22} /> : <FiMenu size={22} />}
+          {!menuOuvert && nbNotifs > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] font-bold min-w-4 h-4 rounded-full flex items-center justify-center px-1 leading-none">
+              {nbNotifs > 9 ? '9+' : nbNotifs}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* ── Overlay mobile ── */}
+      {menuOuvert && (
+        <div
+          onClick={fermerMenu}
+          className="lg:hidden fixed inset-0 bg-black/50 z-20"
+        />
+      )}
+
       {/* ── Sidebar ── */}
-      <aside className="w-64 bg-slate-900 flex flex-col fixed h-full z-10 shadow-2xl">
+      <aside className={`w-64 bg-slate-900 flex flex-col fixed h-full z-30 shadow-2xl transition-transform duration-200 ${
+        menuOuvert ? 'translate-x-0' : '-translate-x-full'
+      } lg:translate-x-0`}>
 
         {/* Logo ICAM avec motif arcs */}
         <div className="relative overflow-hidden bg-orange-500 px-5 py-4">
@@ -89,6 +125,12 @@ export default function MainLayout() {
                 Gestion du matériel
               </div>
             </div>
+            <button
+              onClick={fermerMenu}
+              className="lg:hidden ml-auto p-1.5 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition cursor-pointer"
+            >
+              <FiX size={18} />
+            </button>
           </div>
         </div>
 
@@ -103,6 +145,7 @@ export default function MainLayout() {
               key={to}
               to={to}
               end={to === '/'}
+              onClick={fermerMenu}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${
                   isActive
@@ -135,6 +178,7 @@ export default function MainLayout() {
               {/* Catégories : visible par tous les admins */}
               <NavLink
                 to="/categories"
+                onClick={fermerMenu}
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${
                     isActive
@@ -150,6 +194,7 @@ export default function MainLayout() {
               {estSuperAdmin && (
                 <NavLink
                   to="/utilisateurs"
+                  onClick={fermerMenu}
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${
                       isActive
@@ -205,7 +250,7 @@ export default function MainLayout() {
       </aside>
 
       {/* ── Contenu principal ── */}
-      <main className="flex-1 ml-64 min-h-screen">
+      <main className="flex-1 lg:ml-64 min-h-screen pt-14 lg:pt-0 w-full min-w-0">
         {/* Barre orange en haut du contenu - signature ICAM */}
         <div className="h-1 bg-gradient-to-r from-orange-300 via-orange-500 to-orange-700 sticky top-0 z-10" />
         {profilErreur ? (

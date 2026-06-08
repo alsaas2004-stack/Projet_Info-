@@ -104,8 +104,8 @@ export default function Dashboard() {
   )
 
   return (
-    <div className="p-8">
-      <div className="h-1 bg-gradient-to-r from-orange-300 via-orange-500 to-orange-700 -mx-8 -mt-8 mb-8" />
+    <div className="p-4 sm:p-8">
+      <div className="h-1 bg-gradient-to-r from-orange-300 via-orange-500 to-orange-700 -mx-4 -mt-4 sm:-mx-8 sm:-mt-8 mb-8" />
 
       {/* En-tête */}
       <div className="mb-8">
@@ -145,7 +145,7 @@ export default function Dashboard() {
           <StatCard icon={FiAlertTriangle}label="Indisponibles" value={stats.indisponible}         color="bg-red-500"    to="/materiels?etat=indisponible" />
         </div>
       ) : (
-        <div className="grid grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
           <StatCard icon={FiPackage}   label="Total matériels"   value={stats.total}      color="bg-slate-600"  to="/materiels" />
           <StatCard icon={FiBox}       label="Disponibles"       value={stats.disponible} color="bg-green-500"  to="/materiels?etat=disponible" />
           <StatCard icon={FiClipboard} label="En cours d'emprunt" value={stats.enCours}   color="bg-orange-500" to="/emprunts?statut=en_cours" />

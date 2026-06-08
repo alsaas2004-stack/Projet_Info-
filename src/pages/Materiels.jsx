@@ -71,8 +71,8 @@ export default function Materiels() {
   })
 
   return (
-    <div className="p-8">
-      <div className="h-1 bg-gradient-to-r from-orange-300 via-orange-500 to-orange-700 -mx-8 -mt-8 mb-8" />
+    <div className="p-4 sm:p-8">
+      <div className="h-1 bg-gradient-to-r from-orange-300 via-orange-500 to-orange-700 -mx-4 -mt-4 sm:-mx-8 sm:-mt-8 mb-8" />
 
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
