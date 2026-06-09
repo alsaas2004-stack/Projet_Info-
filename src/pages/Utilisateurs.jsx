@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
-import { FiUsers, FiLoader, FiShield, FiUser, FiToggleLeft, FiTrash2, FiMail, FiPhone, FiChevronDown } from 'react-icons/fi'
+import { FiUsers, FiLoader, FiShield, FiUser, FiToggleLeft, FiTrash2, FiMail, FiPhone, FiChevronDown, FiCheckSquare, FiSquare } from 'react-icons/fi'
 
 const ROLES = [
   { value: 'etudiant',   label: 'Étudiant',        cls: 'bg-slate-100 text-slate-600'   },
@@ -26,6 +26,8 @@ export default function Utilisateurs() {
   const [utilisateurs, setUtilisateurs] = useState([])
   const [loading, setLoading] = useState(true)
   const [filtreRole, setFiltreRole] = useState('')
+  const [selectionnes, setSelectionnes] = useState(new Set())
+  const [suppressionLoading, setSuppressionLoading] = useState(false)
 
   useEffect(() => { charger() }, [])
 
@@ -50,6 +52,30 @@ export default function Utilisateurs() {
     setUtilisateurs(prev => prev.map(u => u.id_utilisateur === id ? { ...u, actif: !actuelActif } : u))
   }
 
+  function toggleSelection(id) {
+    setSelectionnes(prev => {
+      const s = new Set(prev)
+      s.has(id) ? s.delete(id) : s.add(id)
+      return s
+    })
+  }
+
+  function selectionnerTousEtudiants() {
+    const ids = filtres.filter(u => u.role === 'etudiant' && u.id_utilisateur !== profil.id_utilisateur).map(u => u.id_utilisateur)
+    setSelectionnes(new Set(ids))
+  }
+
+  async function supprimerSelection() {
+    if (selectionnes.size === 0) return
+    const noms = utilisateurs.filter(u => selectionnes.has(u.id_utilisateur)).map(u => u.nom).join(', ')
+    if (!confirm(`Supprimer ${selectionnes.size} compte(s) ?\n\n${noms}`)) return
+    setSuppressionLoading(true)
+    await supabase.from('utilisateur').update({ actif: false }).in('id_utilisateur', [...selectionnes])
+    setUtilisateurs(prev => prev.map(u => selectionnes.has(u.id_utilisateur) ? { ...u, actif: false } : u))
+    setSelectionnes(new Set())
+    setSuppressionLoading(false)
+  }
+
   async function changerRole(id, newRole) {
     if (id === profil.id_utilisateur) return
     const utilisateur = utilisateurs.find(u => u.id_utilisateur === id)
@@ -72,23 +98,55 @@ export default function Utilisateurs() {
     <div className="p-4 sm:p-8">
       <div className="h-1 bg-gradient-to-r from-orange-300 via-orange-500 to-orange-700 -mx-4 -mt-4 sm:-mx-8 sm:-mt-8 mb-8" />
 
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-extrabold text-slate-900">Utilisateurs</h1>
-          <p className="text-slate-500 text-sm mt-1">
-            {utilisateurs.length} compte{utilisateurs.length > 1 ? 's' : ''} — {nbActifs} actif{nbActifs > 1 ? 's' : ''}
-          </p>
+      <div className="mb-6">
+        <div className="flex items-start justify-between gap-4 mb-4">
+          <div>
+            <h1 className="text-2xl font-extrabold text-slate-900">Utilisateurs</h1>
+            <p className="text-slate-500 text-sm mt-1">
+              {utilisateurs.length} compte{utilisateurs.length > 1 ? 's' : ''} — {nbActifs} actif{nbActifs > 1 ? 's' : ''}
+            </p>
+          </div>
+          <select
+            value={filtreRole}
+            onChange={e => setFiltreRole(e.target.value)}
+            className="px-3 py-2.5 rounded-xl border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm bg-white cursor-pointer"
+          >
+            <option value="">Tous les rôles</option>
+            <option value="superadmin">Super admins</option>
+            <option value="admin">Admins</option>
+            <option value="etudiant">Étudiants</option>
+          </select>
         </div>
-        <select
-          value={filtreRole}
-          onChange={e => setFiltreRole(e.target.value)}
-          className="px-3 py-2.5 rounded-xl border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm bg-white cursor-pointer"
-        >
-          <option value="">Tous les rôles</option>
-          <option value="superadmin">Super admins</option>
-          <option value="admin">Admins</option>
-          <option value="etudiant">Étudiants</option>
-        </select>
+
+        {/* Bulk actions */}
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={selectionnerTousEtudiants}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-50 transition cursor-pointer"
+          >
+            <FiCheckSquare size={13} />
+            Sélectionner tous les étudiants
+          </button>
+          {selectionnes.size > 0 && (
+            <button
+              onClick={supprimerSelection}
+              disabled={suppressionLoading}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white text-xs font-semibold transition cursor-pointer disabled:opacity-60"
+            >
+              <FiTrash2 size={13} />
+              {suppressionLoading ? 'Suppression…' : `Supprimer la sélection (${selectionnes.size})`}
+            </button>
+          )}
+          {selectionnes.size > 0 && (
+            <button
+              onClick={() => setSelectionnes(new Set())}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 text-slate-400 text-xs font-semibold hover:bg-slate-50 transition cursor-pointer"
+            >
+              <FiSquare size={13} />
+              Désélectionner tout
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="bg-white rounded-2xl border border-slate-100 shadow overflow-hidden">
@@ -106,8 +164,16 @@ export default function Utilisateurs() {
             {/* ── Cartes mobile ── */}
             <div className="sm:hidden divide-y divide-slate-50">
               {filtres.map(u => (
-                <div key={u.id_utilisateur} className="p-4">
+                <div key={u.id_utilisateur} className={`p-4 ${selectionnes.has(u.id_utilisateur) ? 'bg-orange-50' : ''}`}>
                   <div className="flex items-center gap-3 mb-3">
+                    {u.role === 'etudiant' && u.id_utilisateur !== profil.id_utilisateur && (
+                      <button
+                        onClick={() => toggleSelection(u.id_utilisateur)}
+                        className="flex-shrink-0 text-slate-400 hover:text-orange-500 transition cursor-pointer"
+                      >
+                        {selectionnes.has(u.id_utilisateur) ? <FiCheckSquare size={18} className="text-orange-500" /> : <FiSquare size={18} />}
+                      </button>
+                    )}
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0 ${
                       u.role === 'superadmin' ? 'bg-purple-100 text-purple-600' : u.role === 'admin' ? 'bg-orange-100 text-orange-600' : 'bg-slate-100 text-slate-600'
                     }`}>
@@ -166,6 +232,7 @@ export default function Utilisateurs() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-slate-100 bg-slate-50">
+                    <th className="px-4 py-3.5 w-10" />
                     <th className="text-left px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Utilisateur</th>
                     <th className="text-left px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Contact</th>
                     <th className="text-left px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Rôle</th>
@@ -175,7 +242,17 @@ export default function Utilisateurs() {
                 </thead>
                 <tbody className="divide-y divide-slate-50">
                   {filtres.map(u => (
-                    <tr key={u.id_utilisateur} className="hover:bg-slate-50/50 transition-colors">
+                    <tr key={u.id_utilisateur} className={`hover:bg-slate-50/50 transition-colors ${selectionnes.has(u.id_utilisateur) ? 'bg-orange-50' : ''}`}>
+                      <td className="px-4 py-4 w-10">
+                        {u.role === 'etudiant' && u.id_utilisateur !== profil.id_utilisateur && (
+                          <button
+                            onClick={() => toggleSelection(u.id_utilisateur)}
+                            className="text-slate-400 hover:text-orange-500 transition cursor-pointer"
+                          >
+                            {selectionnes.has(u.id_utilisateur) ? <FiCheckSquare size={16} className="text-orange-500" /> : <FiSquare size={16} />}
+                          </button>
+                        )}
+                      </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0 ${

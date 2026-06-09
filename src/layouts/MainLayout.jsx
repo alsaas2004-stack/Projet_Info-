@@ -4,8 +4,9 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import {
   FiHome, FiBox, FiTag, FiClipboard,
-  FiClock, FiBell, FiUsers, FiLogOut, FiPackage, FiMenu, FiX
+  FiClock, FiBell, FiUsers, FiLogOut, FiPackage, FiMenu, FiX, FiShoppingCart
 } from 'react-icons/fi'
+import { useCart } from '../context/CartContext'
 
 // Petits arcs décoratifs pour le header sidebar
 function SidebarArcs() {
@@ -32,6 +33,7 @@ function getRoleBadge(role) {
 
 export default function MainLayout() {
   const { profil, profilErreur, estAdmin, estSuperAdmin, logout } = useAuth()
+  const { nbArticles } = useCart()
   const navigate = useNavigate()
   const [nbNotifs, setNbNotifs] = useState(0)
   const [menuOuvert, setMenuOuvert] = useState(false)
@@ -62,11 +64,12 @@ export default function MainLayout() {
   }
 
   const navCommun = [
-    { to: '/',              icon: FiHome,      label: 'Tableau de bord' },
-    { to: '/materiels',     icon: FiBox,       label: 'Matériels'       },
-    { to: '/emprunts',      icon: FiClipboard, label: 'Mes emprunts'    },
-    { to: '/historique',    icon: FiClock,     label: 'Historique'      },
-    { to: '/notifications', icon: FiBell,      label: 'Notifications', badge: nbNotifs },
+    { to: '/',              icon: FiHome,         label: 'Tableau de bord' },
+    { to: '/materiels',     icon: FiBox,           label: 'Matériels'       },
+    ...(!estAdmin ? [{ to: '/panier', icon: FiShoppingCart, label: 'Mon panier', badge: nbArticles }] : []),
+    { to: '/emprunts',      icon: FiClipboard,     label: estAdmin ? 'Emprunts' : 'Mes emprunts' },
+    { to: '/historique',    icon: FiClock,         label: 'Historique'      },
+    { to: '/notifications', icon: FiBell,          label: 'Notifications', badge: nbNotifs },
   ]
 
   function fermerMenu() {

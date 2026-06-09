@@ -170,6 +170,13 @@ export default function Materiels() {
                     {m.categorie.nom_categorie}
                   </span>
                 )}
+                {estAdmin && (
+                  <span className={`text-xs font-semibold mt-1 self-start ${
+                    (m.stock ?? 1) === 0 ? 'text-red-500' : (m.stock ?? 1) <= 3 ? 'text-orange-500' : 'text-slate-400'
+                  }`}>
+                    Stock : {m.stock ?? 1}
+                  </span>
+                )}
 
                 <div className="flex gap-2 mt-auto pt-3">
                   <Link

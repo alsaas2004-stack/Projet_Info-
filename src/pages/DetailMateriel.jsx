@@ -3,9 +3,10 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
+import { useCart } from '../context/CartContext'
 import {
   FiBox, FiLoader, FiArrowLeft, FiEdit2, FiEyeOff,
-  FiClipboard, FiCalendar, FiX, FiCheck, FiPrinter, FiTag
+  FiClipboard, FiCalendar, FiX, FiCheck, FiPrinter, FiTag, FiShoppingCart
 } from 'react-icons/fi'
 
 function BadgeEtat({ etat }) {
@@ -38,6 +39,7 @@ function BadgeStatut({ statut }) {
 export default function DetailMateriel() {
   const { id } = useParams()
   const { estAdmin, profil } = useAuth()
+  const { ajouterAuPanier, panier } = useCart()
   const navigate = useNavigate()
 
   const [materiel, setMateriel] = useState(null)
@@ -47,8 +49,7 @@ export default function DetailMateriel() {
   const [showModal, setShowModal] = useState(false)
   const [dateRetourPrevue, setDateRetourPrevue] = useState('')
   const [quantite, setQuantite] = useState(1)
-  const [submitting, setSubmitting] = useState(false)
-  const [demandeEnvoyee, setDemandeEnvoyee] = useState(false)
+  const [ajouteAuPanier, setAjouteAuPanier] = useState(false)
 
   useEffect(() => { charger() }, [id])
 
@@ -76,75 +77,14 @@ export default function DetailMateriel() {
     navigate('/materiels')
   }
 
-  async function demanderEmprunt(e) {
+  function ajouterPanier(e) {
     e.preventDefault()
-    setSubmitting(true)
-
-    // Vérifier qu'une demande en attente ou en cours n'existe pas déjà
-    const { data: dejaEmprunt } = await supabase
-      .from('emprunt')
-      .select('id_emprunt')
-      .eq('id_materiel', id)
-      .eq('id_utilisateur', profil.id_utilisateur)
-      .in('statut', ['en_attente', 'en_cours'])
-      .maybeSingle()
-
-    if (dejaEmprunt) {
-      setSubmitting(false)
-      setShowModal(false)
-      setDemandeEnvoyee(true)
-      return
-    }
-
-    const { data: nouvelEmprunt, error: errEmprunt } = await supabase
-      .from('emprunt')
-      .insert({
-        id_materiel: id,
-        id_utilisateur: profil.id_utilisateur,
-        statut: 'en_attente',
-        date_emprunt: new Date().toISOString(),
-        date_retour_prevue: dateRetourPrevue || null,
-        quantite: quantite || 1,
-      })
-      .select()
-      .single()
-
-    if (errEmprunt) {
-      console.error('Erreur insert emprunt:', errEmprunt)
-      setSubmitting(false)
-      return
-    }
-
-    // Notifier tous les admins et superadmins
-    const { data: admins } = await supabase
-      .from('utilisateur')
-      .select('id_utilisateur')
-      .in('role', ['admin', 'superadmin'])
-      .eq('actif', true)
-
-    if (admins && admins.length > 0) {
-      await supabase.from('notification').insert(
-        admins.map(admin => ({
-          type_notif: 'demande_recue',
-          message: `${profil.nom} demande à emprunter "${materiel.nom}"${(quantite || 1) > 1 ? ` (×${quantite})` : ''}`,
-          id_utilisateur: admin.id_utilisateur,
-          id_emprunt: nouvelEmprunt.id_emprunt,
-        }))
-      )
-    }
-
-    await supabase.from('historique').insert({
-      type_action: 'emprunt',
-      commentaire: `Demande d'emprunt de ${profil.nom} pour ${materiel.nom}`,
-      id_materiel: id,
-      id_utilisateur: profil.id_utilisateur,
-    })
-
-    setSubmitting(false)
+    ajouterAuPanier(materiel, quantite, dateRetourPrevue || null)
     setShowModal(false)
-    setDemandeEnvoyee(true)
-    charger()
+    setAjouteAuPanier(true)
   }
+
+  const dejaDansPanier = panier.some(i => i.id_materiel === id)
 
   if (loading) return (
     <div className="flex items-center justify-center min-h-96">
@@ -217,24 +157,37 @@ export default function DetailMateriel() {
                 </p>
               )}
 
+              {/* Stock (admin) */}
+              {estAdmin && (
+                <p className="text-xs text-slate-500 flex items-center gap-1.5 mb-4">
+                  <FiClipboard size={12} />
+                  Stock disponible : <span className={`font-bold ${(materiel.stock ?? 1) === 0 ? 'text-red-500' : (materiel.stock ?? 1) <= 3 ? 'text-orange-500' : 'text-green-600'}`}>{materiel.stock ?? 1}</span>
+                </p>
+              )}
+
               {/* Actions */}
               <div className="flex gap-3 flex-wrap">
-                {!estAdmin && materiel.etat === 'disponible' && !demandeEnvoyee && (
+                {!estAdmin && (materiel.etat === 'disponible') && (materiel.stock ?? 1) > 0 && !ajouteAuPanier && !dejaDansPanier && (
                   <button
                     onClick={() => setShowModal(true)}
                     className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition shadow-lg shadow-orange-100 cursor-pointer"
                   >
-                    <FiClipboard size={15} />
-                    Demander l'emprunt
+                    <FiShoppingCart size={15} />
+                    Ajouter au panier
                   </button>
                 )}
-                {!estAdmin && demandeEnvoyee && (
-                  <div className="flex items-center gap-2 text-green-700 bg-green-50 px-4 py-2.5 rounded-xl text-sm font-semibold border border-green-200">
-                    <FiCheck size={15} />
-                    Demande envoyée — en attente de validation
+                {!estAdmin && (ajouteAuPanier || dejaDansPanier) && (
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 text-green-700 bg-green-50 px-4 py-2.5 rounded-xl text-sm font-semibold border border-green-200">
+                      <FiCheck size={15} />
+                      Ajouté au panier
+                    </div>
+                    <Link to="/panier" className="flex items-center gap-2 text-orange-600 hover:text-orange-700 font-semibold text-sm transition">
+                      Voir le panier →
+                    </Link>
                   </div>
                 )}
-                {!estAdmin && materiel.etat !== 'disponible' && !demandeEnvoyee && (
+                {!estAdmin && (materiel.etat !== 'disponible' || (materiel.stock ?? 1) === 0) && !ajouteAuPanier && !dejaDansPanier && (
                   <p className="text-sm text-slate-400 py-2">
                     Ce matériel n'est pas disponible à l'emprunt pour le moment.
                   </p>
@@ -305,33 +258,32 @@ export default function DetailMateriel() {
         </div>
       </div>
 
-      {/* ── Modal demande emprunt ── */}
+      {/* ── Modal ajout panier ── */}
       {showModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl border border-slate-100 w-full max-w-md overflow-hidden">
             <div className="h-1 bg-gradient-to-r from-orange-300 via-orange-500 to-orange-600" />
             <div className="p-6">
               <div className="flex items-center justify-between mb-5">
-                <h2 className="text-lg font-bold text-slate-800">Demande d'emprunt</h2>
-                <button
-                  onClick={() => setShowModal(false)}
-                  className="p-2 rounded-xl text-slate-400 hover:bg-slate-100 transition cursor-pointer"
-                >
+                <h2 className="text-lg font-bold text-slate-800">Ajouter au panier</h2>
+                <button onClick={() => setShowModal(false)} className="p-2 rounded-xl text-slate-400 hover:bg-slate-100 transition cursor-pointer">
                   <FiX size={18} />
                 </button>
               </div>
               <div className="bg-slate-50 rounded-xl px-4 py-3 mb-5">
                 <p className="text-sm font-semibold text-slate-800">{materiel.nom}</p>
                 {materiel.reference && <p className="text-xs text-slate-400 mt-0.5">Réf. {materiel.reference}</p>}
+                <p className="text-xs text-slate-400 mt-0.5">Stock disponible : {materiel.stock ?? 1}</p>
               </div>
-              <form onSubmit={demanderEmprunt} className="space-y-4">
+              <form onSubmit={ajouterPanier} className="space-y-4">
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-1.5">Quantité</label>
                   <input
                     type="number"
                     value={quantite}
-                    onChange={e => setQuantite(Math.max(1, parseInt(e.target.value) || 1))}
+                    onChange={e => setQuantite(Math.min(materiel.stock ?? 1, Math.max(1, parseInt(e.target.value) || 1)))}
                     min={1}
+                    max={materiel.stock ?? 1}
                     className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm bg-slate-50"
                   />
                 </div>
@@ -350,13 +302,9 @@ export default function DetailMateriel() {
                 </div>
                 <button
                   type="submit"
-                  disabled={submitting}
-                  className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-xl text-sm transition shadow-lg shadow-orange-100 cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2"
+                  className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-xl text-sm transition shadow-lg shadow-orange-100 cursor-pointer flex items-center justify-center gap-2"
                 >
-                  {submitting
-                    ? <><FiLoader size={15} className="animate-spin" /> Envoi…</>
-                    : <><FiClipboard size={15} /> Envoyer la demande</>
-                  }
+                  <FiShoppingCart size={15} /> Ajouter au panier
                 </button>
               </form>
             </div>

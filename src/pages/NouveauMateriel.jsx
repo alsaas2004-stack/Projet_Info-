@@ -18,6 +18,7 @@ export default function NouveauMateriel() {
   const [reference, setReference] = useState('')
   const [description, setDescription] = useState('')
   const [etat, setEtat] = useState('disponible')
+  const [stock, setStock] = useState(1)
   const [imageUrl, setImageUrl] = useState('')
   const [dateAcquisition, setDateAcquisition] = useState('')
   const [idCategorie, setIdCategorie] = useState('')
@@ -42,6 +43,7 @@ export default function NouveauMateriel() {
       setImageUrl(data.image_url || '')
       setDateAcquisition(data.date_acquisition ? data.date_acquisition.split('T')[0] : '')
       setIdCategorie(data.id_categorie || '')
+      setStock(data.stock ?? 1)
     }
     setLoading(false)
   }
@@ -56,6 +58,7 @@ export default function NouveauMateriel() {
       reference: reference.trim() || null,
       description: description.trim() || null,
       etat,
+      stock: stock || 1,
       image_url: imageUrl.trim() || null,
       date_acquisition: dateAcquisition || null,
       id_categorie: idCategorie || null,
@@ -160,6 +163,17 @@ export default function NouveauMateriel() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Stock total</label>
+            <input
+              type="number"
+              value={stock}
+              onChange={e => setStock(Math.max(0, parseInt(e.target.value) || 0))}
+              min={0}
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm bg-slate-50"
+            />
+            <p className="text-xs text-slate-400 mt-1">Nombre d'unités disponibles à l'emprunt</p>
+          </div>
+          <div>
             <label className="block text-sm font-semibold text-slate-700 mb-1.5">État</label>
             <select
               value={etat}
@@ -170,6 +184,9 @@ export default function NouveauMateriel() {
               <option value="indisponible">Indisponible</option>
             </select>
           </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-1.5">Date d'acquisition</label>
             <input

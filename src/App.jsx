@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
+import { CartProvider } from './context/CartContext'
 import PrivateRoute from './components/PrivateRoute'
 import MainLayout from './layouts/MainLayout'
 import Login from './pages/Login'
@@ -13,12 +14,14 @@ import Emprunts from './pages/Emprunts'
 import Historique from './pages/Historique'
 import Notifications from './pages/Notifications'
 import Utilisateurs from './pages/Utilisateurs'
+import Panier from './pages/Panier'
 
 // Les autres pages seront ajoutées au fur et à mesure
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+      <CartProvider>
         <Routes>
           {/* Pages publiques */}
           <Route path="/login" element={<Login />} />
@@ -43,11 +46,13 @@ function App() {
             <Route path="historique" element={<Historique />} />
             <Route path="notifications" element={<Notifications />} />
             <Route path="utilisateurs" element={<Utilisateurs />} />
+            <Route path="panier" element={<Panier />} />
           </Route>
 
           {/* Redirige tout le reste vers la racine */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+      </CartProvider>
       </AuthProvider>
     </BrowserRouter>
   )
