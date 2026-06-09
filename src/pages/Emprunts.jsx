@@ -62,15 +62,13 @@ export default function Emprunts() {
 
   async function accepter(emp) {
     setActionLoading(emp.id_emprunt)
-    const { data: mat } = await supabase.from('materiel').select('stock').eq('id_materiel', emp.id_materiel).single()
-    const newStock = Math.max(0, (mat?.stock ?? 1) - (emp.quantite || 1))
+    // Le trigger DB met à jour materiel.etat et materiel.stock automatiquement
     await Promise.all([
       supabase.from('emprunt').update({
         statut: 'en_cours',
         valide_par: profil.id_utilisateur,
         date_validation: new Date().toISOString(),
       }).eq('id_emprunt', emp.id_emprunt),
-      supabase.from('materiel').update({ etat: newStock === 0 ? 'emprunte' : 'disponible', stock: newStock }).eq('id_materiel', emp.id_materiel),
       supabase.from('historique').insert({
         type_action: 'emprunt',
         commentaire: `Emprunt accepté : ${emp.materiel?.nom} → ${emp.utilisateur?.nom}`,
@@ -91,6 +89,7 @@ export default function Emprunts() {
   async function refuser() {
     if (!empruntARefuser) return
     setActionLoading(empruntARefuser.id_emprunt)
+    // Le trigger DB restore materiel.etat = 'disponible' automatiquement
     await Promise.all([
       supabase.from('emprunt').update({
         statut: 'refuse',
@@ -98,7 +97,6 @@ export default function Emprunts() {
         valide_par: profil.id_utilisateur,
         date_validation: new Date().toISOString(),
       }).eq('id_emprunt', empruntARefuser.id_emprunt),
-      supabase.from('materiel').update({ etat: 'disponible' }).eq('id_materiel', empruntARefuser.id_materiel),
       supabase.from('historique').insert({
         type_action: 'refus',
         commentaire: `Emprunt refusé : ${empruntARefuser.materiel?.nom}${motifRefus ? ` — ${motifRefus}` : ''}`,
@@ -121,17 +119,12 @@ export default function Emprunts() {
 
   async function enregistrerRetour(emp) {
     setActionLoading(emp.id_emprunt)
-    const { data: mat } = await supabase.from('materiel').select('stock, etat').eq('id_materiel', emp.id_materiel).single()
-    const newStock = (mat?.stock ?? 0) + (emp.quantite || 1)
+    // Le trigger DB restaure materiel.etat et materiel.stock automatiquement
     await Promise.all([
       supabase.from('emprunt').update({
         statut: 'rendu',
         date_retour_reelle: new Date().toISOString(),
       }).eq('id_emprunt', emp.id_emprunt),
-      supabase.from('materiel').update({
-        etat: mat?.etat === 'indisponible' ? 'indisponible' : 'disponible',
-        stock: newStock,
-      }).eq('id_materiel', emp.id_materiel),
       supabase.from('historique').insert({
         type_action: 'retour',
         commentaire: `Retour de ${emp.materiel?.nom} par ${emp.utilisateur?.nom}`,

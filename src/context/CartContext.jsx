@@ -26,15 +26,15 @@ export function CartProvider({ children }) {
     setPanier(prev => {
       const expires = prev.filter(i => i.expiresAt && maintenant > i.expiresAt).map(i => i.id_materiel)
       if (expires.length > 0) {
-        supabase.from('materiel').update({ etat: 'disponible' }).in('id_materiel', expires).then()
+        supabase.rpc('liberer_materiels', { p_ids: expires }).then()
       }
       return prev.filter(i => !i.expiresAt || maintenant <= i.expiresAt)
     })
   }
 
   function ajouterAuPanier(materiel, quantite = 1, dateRetourPrevue = null) {
-    // Réserve le matériel en le passant "en attente" pendant 10 min
-    supabase.from('materiel').update({ etat: 'en_attente' }).eq('id_materiel', materiel.id_materiel)
+    // Réserve via SECURITY DEFINER (contourne RLS pour les étudiants)
+    supabase.rpc('reserver_materiel', { p_id_materiel: materiel.id_materiel })
       .then(({ error }) => { if (error) console.error('Erreur réservation matériel:', error.message) })
 
     const expiresAt = Date.now() + DUREE_RESERVATION_MS
@@ -61,8 +61,7 @@ export function CartProvider({ children }) {
   }
 
   function retirerDuPanier(id) {
-    // Libère la réservation
-    supabase.from('materiel').update({ etat: 'disponible' }).eq('id_materiel', id)
+    supabase.rpc('liberer_materiel', { p_id_materiel: id })
       .then(({ error }) => { if (error) console.error('Erreur libération matériel:', error.message) })
     setPanier(prev => prev.filter(i => i.id_materiel !== id))
   }
@@ -73,10 +72,10 @@ export function CartProvider({ children }) {
   }
 
   function viderPanier() {
-    // Libère toutes les réservations
     const ids = panier.map(i => i.id_materiel)
     if (ids.length > 0) {
-      supabase.from('materiel').update({ etat: 'disponible' }).in('id_materiel', ids).then()
+      supabase.rpc('liberer_materiels', { p_ids: ids })
+        .then(({ error }) => { if (error) console.error('Erreur libération panier:', error.message) })
     }
     setPanier([])
     localStorage.removeItem('icamtrack_panier')
