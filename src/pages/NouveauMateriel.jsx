@@ -125,13 +125,10 @@ export default function NouveauMateriel() {
       }
     }
 
-    if (isKit && materielId) {
-      await supabase.from('kit_composant').delete().eq('id_kit', materielId)
-      if (composants.length > 0) {
-        await supabase.from('kit_composant').insert(
-          composants.map(c => ({ id_kit: materielId, id_composant: c.id_materiel, quantite: c.quantite }))
-        )
-      }
+    if (!estEdition && isKit && materielId && composants.length > 0) {
+      await supabase.from('kit_composant').insert(
+        composants.map(c => ({ id_kit: materielId, id_composant: c.id_materiel, quantite: c.quantite }))
+      )
     }
 
     setSaving(false)
@@ -261,27 +258,29 @@ export default function NouveauMateriel() {
           )}
         </div>
 
-        {/* Toggle kit */}
-        <div className="border-t border-slate-100 pt-5">
-          <label className="flex items-center gap-3 cursor-pointer select-none">
-            <div
-              onClick={() => setIsKit(v => !v)}
-              className={`w-11 h-6 rounded-full flex items-center transition-colors ${isKit ? 'bg-orange-500' : 'bg-slate-200'}`}
-            >
-              <div className={`w-5 h-5 bg-white rounded-full shadow transition-transform mx-0.5 ${isKit ? 'translate-x-5' : 'translate-x-0'}`} />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-slate-700 flex items-center gap-1.5">
-                <FiPackage size={14} className="text-orange-500" />
-                C'est un kit
-              </p>
-              <p className="text-xs text-slate-400">Le stock des composants sera mis à jour automatiquement</p>
-            </div>
-          </label>
-        </div>
+        {/* Toggle kit — création uniquement */}
+        {!estEdition && (
+          <div className="border-t border-slate-100 pt-5">
+            <label className="flex items-center gap-3 cursor-pointer select-none">
+              <div
+                onClick={() => setIsKit(v => !v)}
+                className={`w-11 h-6 rounded-full flex items-center transition-colors ${isKit ? 'bg-orange-500' : 'bg-slate-200'}`}
+              >
+                <div className={`w-5 h-5 bg-white rounded-full shadow transition-transform mx-0.5 ${isKit ? 'translate-x-5' : 'translate-x-0'}`} />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-700 flex items-center gap-1.5">
+                  <FiPackage size={14} className="text-orange-500" />
+                  C'est un kit
+                </p>
+                <p className="text-xs text-slate-400">Le stock des composants sera mis à jour automatiquement</p>
+              </div>
+            </label>
+          </div>
+        )}
 
-        {/* Composition du kit */}
-        {isKit && (
+        {/* Composition du kit — création uniquement */}
+        {!estEdition && isKit && (
           <div className="bg-orange-50 border border-orange-100 rounded-2xl p-4 space-y-3">
             <h3 className="text-sm font-bold text-slate-700">Composants du kit</h3>
 
