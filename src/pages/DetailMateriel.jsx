@@ -11,9 +11,10 @@ import {
 
 function BadgeEtat({ etat }) {
   const cfg = {
-    disponible:  { cls: 'bg-green-100 text-green-700',  label: 'Disponible'   },
-    emprunte:    { cls: 'bg-orange-100 text-orange-700', label: 'Emprunté'     },
-    indisponible:{ cls: 'bg-red-100 text-red-700',       label: 'Indisponible' },
+    disponible:   { cls: 'bg-green-100 text-green-700',   label: 'Disponible'   },
+    emprunte:     { cls: 'bg-orange-100 text-orange-700', label: 'Emprunté'     },
+    indisponible: { cls: 'bg-red-100 text-red-700',       label: 'Indisponible' },
+    en_attente:   { cls: 'bg-yellow-100 text-yellow-700', label: 'En attente'   },
   }
   const { cls, label } = cfg[etat] || { cls: 'bg-slate-100 text-slate-500', label: etat }
   return (

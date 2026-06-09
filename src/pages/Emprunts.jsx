@@ -98,6 +98,7 @@ export default function Emprunts() {
         valide_par: profil.id_utilisateur,
         date_validation: new Date().toISOString(),
       }).eq('id_emprunt', empruntARefuser.id_emprunt),
+      supabase.from('materiel').update({ etat: 'disponible' }).eq('id_materiel', empruntARefuser.id_materiel),
       supabase.from('historique').insert({
         type_action: 'refus',
         commentaire: `Emprunt refusé : ${empruntARefuser.materiel?.nom}${motifRefus ? ` — ${motifRefus}` : ''}`,

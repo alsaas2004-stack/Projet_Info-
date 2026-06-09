@@ -76,9 +76,15 @@ export default function Login() {
   async function handleSignup(e) {
     e.preventDefault()
     setErreur('')
+
+    if (!signupEmail.toLowerCase().endsWith('@icam.fr')) {
+      setErreur('Seules les adresses @icam.fr sont acceptées pour l\'inscription.')
+      return
+    }
+
     setSignupLoading(true)
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: signupEmail,
       password: signupPassword,
       options: {
@@ -94,7 +100,7 @@ export default function Login() {
       } else {
         setErreur('Erreur : ' + error.message)
       }
-    } else if (data.user?.identities?.length === 0) {
+    } else if (data?.user?.identities?.length === 0) {
       setErreur('Un compte existe déjà avec cet email. Veuillez vous connecter.')
     } else {
       setSignupSucces(true)
@@ -243,7 +249,7 @@ export default function Login() {
                 <>
                   <h2 className="text-xl font-bold text-slate-800 mb-1">Créer un compte</h2>
                   <p className="text-sm text-slate-400 mb-6">
-                    Votre compte sera créé avec le rôle étudiant.
+                    Réservé aux adresses <span className="font-semibold text-orange-500">@icam.fr</span>
                   </p>
 
                   {erreur && (

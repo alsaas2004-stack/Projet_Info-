@@ -1,17 +1,31 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
-import { FiShoppingCart, FiTrash2, FiArrowLeft, FiLoader, FiCheck, FiBox } from 'react-icons/fi'
+import { FiShoppingCart, FiTrash2, FiArrowLeft, FiLoader, FiCheck, FiBox, FiClock } from 'react-icons/fi'
+
+function minutesRestantes(expiresAt) {
+  if (!expiresAt) return null
+  const ms = expiresAt - Date.now()
+  if (ms <= 0) return 0
+  return Math.ceil(ms / 60_000)
+}
 
 export default function Panier() {
   const { profil } = useAuth()
-  const { panier, retirerDuPanier, modifierQuantite, viderPanier } = useCart()
+  const { panier, retirerDuPanier, modifierQuantite, viderPanier, soumettreEtViderPanier } = useCart()
   const navigate = useNavigate()
   const [submitting, setSubmitting] = useState(false)
   const [envoye, setEnvoye] = useState(false)
   const [erreur, setErreur] = useState('')
+  const [, setTick] = useState(0)
+
+  // Rafraîchit le timer toutes les 30s
+  useEffect(() => {
+    const id = setInterval(() => setTick(t => t + 1), 30_000)
+    return () => clearInterval(id)
+  }, [])
 
   async function soumettrePanier() {
     if (panier.length === 0) return
@@ -71,7 +85,7 @@ export default function Panier() {
       }))
     )
 
-    viderPanier()
+    soumettreEtViderPanier()
     setSubmitting(false)
     setEnvoye(true)
   }
@@ -137,7 +151,12 @@ export default function Panier() {
                   {item.nom}
                 </Link>
                 {item.reference && <p className="text-xs text-slate-400">Réf. {item.reference}</p>}
-                <p className="text-xs text-slate-400 mt-0.5">Stock dispo : {item.stock}</p>
+                {item.expiresAt && (
+                  <p className={`text-xs mt-0.5 flex items-center gap-1 ${minutesRestantes(item.expiresAt) <= 2 ? 'text-red-500 font-semibold' : 'text-orange-500'}`}>
+                    <FiClock size={10} />
+                    Réservé encore {minutesRestantes(item.expiresAt)} min
+                  </p>
+                )}
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
                 <div className="flex items-center gap-1">
