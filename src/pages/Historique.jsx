@@ -83,61 +83,60 @@ export default function Historique() {
       <div className="h-1 bg-gradient-to-r from-orange-300 via-orange-500 to-orange-700 -mx-4 -mt-4 sm:-mx-8 sm:-mt-8 mb-8" />
 
       <div className="mb-6">
-        <div className="flex items-start justify-between gap-4 mb-4">
-          <div>
-            <h1 className="text-2xl font-extrabold text-slate-900">Historique</h1>
-            <p className="text-slate-500 text-sm mt-1">
-              {filtres.length} action{filtres.length > 1 ? 's' : ''}
-              {!estAdmin && ' · votre historique personnel'}
-            </p>
-          </div>
-          <div className="flex gap-3 flex-shrink-0 flex-wrap justify-end">
-            {estAdmin && (
-              <input
-                type="text"
-                value={recherche}
-                onChange={e => setRecherche(e.target.value)}
-                placeholder="Rechercher…"
-                className="px-3 py-2.5 rounded-xl border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm bg-white w-44"
-              />
-            )}
-            <select
-              value={filtreAction}
-              onChange={e => setFiltreAction(e.target.value)}
-              className="px-3 py-2.5 rounded-xl border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm bg-white cursor-pointer"
-            >
-              <option value="">Toutes les actions</option>
-              <option value="creation">Création</option>
-              <option value="emprunt">Emprunt</option>
-              <option value="retour">Retour</option>
-              <option value="refus">Refus</option>
-              <option value="mise_indisponible">Mise indisponible</option>
-              <option value="remise_dispo">Remise disponible</option>
-            </select>
-          </div>
+        <div className="mb-4">
+          <h1 className="text-2xl font-extrabold text-slate-900">Historique</h1>
+          <p className="text-slate-500 text-sm mt-1">
+            {filtres.length} action{filtres.length > 1 ? 's' : ''}
+            {!estAdmin && ' · votre historique personnel'}
+          </p>
         </div>
-        <div className="flex items-center gap-3 flex-wrap">
-          <FiCalendar size={14} className="text-slate-400 flex-shrink-0" />
-          <span className="text-xs text-slate-500 font-medium">Période :</span>
-          <input
-            type="date"
-            value={filtreDateDu}
-            onChange={e => setFiltreDateDu(e.target.value)}
-            className="px-3 py-2 rounded-xl border border-slate-200 text-slate-700 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer"
-          />
-          <span className="text-xs text-slate-400">→</span>
-          <input
-            type="date"
-            value={filtreDateAu}
-            onChange={e => setFiltreDateAu(e.target.value)}
-            className="px-3 py-2 rounded-xl border border-slate-200 text-slate-700 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer"
-          />
-          {(filtreDateDu || filtreDateAu) && (
+
+        {/* Barre de filtres unifiée */}
+        <div className="flex flex-wrap gap-2">
+          {estAdmin && (
+            <input
+              type="text"
+              value={recherche}
+              onChange={e => setRecherche(e.target.value)}
+              placeholder="Rechercher…"
+              className="px-3 py-2 rounded-xl border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm bg-white min-w-36"
+            />
+          )}
+          <select
+            value={filtreAction}
+            onChange={e => setFiltreAction(e.target.value)}
+            className="px-3 py-2 rounded-xl border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm bg-white cursor-pointer"
+          >
+            <option value="">Toutes les actions</option>
+            <option value="creation">Création</option>
+            <option value="emprunt">Emprunt</option>
+            <option value="retour">Retour</option>
+            <option value="refus">Refus</option>
+            <option value="mise_indisponible">Mise indisponible</option>
+            <option value="remise_dispo">Remise disponible</option>
+          </select>
+          <div className="flex items-center gap-2 flex-wrap">
+            <FiCalendar size={13} className="text-slate-400 flex-shrink-0" />
+            <input
+              type="date"
+              value={filtreDateDu}
+              onChange={e => setFiltreDateDu(e.target.value)}
+              className="px-3 py-2 rounded-xl border border-slate-200 text-slate-700 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer"
+            />
+            <span className="text-xs text-slate-400">→</span>
+            <input
+              type="date"
+              value={filtreDateAu}
+              onChange={e => setFiltreDateAu(e.target.value)}
+              className="px-3 py-2 rounded-xl border border-slate-200 text-slate-700 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer"
+            />
+          </div>
+          {(filtreDateDu || filtreDateAu || filtreAction || recherche) && (
             <button
-              onClick={() => { setFiltreDateDu(''); setFiltreDateAu('') }}
-              className="text-xs text-slate-400 hover:text-red-500 transition cursor-pointer"
+              onClick={() => { setFiltreDateDu(''); setFiltreDateAu(''); setFiltreAction(''); setRecherche('') }}
+              className="px-3 py-2 rounded-xl text-xs text-slate-400 hover:text-red-500 hover:bg-red-50 border border-slate-200 transition cursor-pointer"
             >
-              Effacer
+              Effacer tout
             </button>
           )}
         </div>

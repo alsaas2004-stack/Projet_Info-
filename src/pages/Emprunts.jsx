@@ -155,24 +155,26 @@ export default function Emprunts() {
       </button>
 
       <div className="mb-6">
-        <div className="flex items-start justify-between gap-4 mb-4">
-          <div>
-            <h1 className="text-2xl font-extrabold text-slate-900">
-              {estAdmin ? 'Gestion des emprunts' : 'Mes emprunts'}
-            </h1>
-            <p className="text-slate-500 text-sm mt-1">
-              {filtres.length} emprunt{filtres.length > 1 ? 's' : ''}
-              {estAdmin && nbAttente > 0 && (
-                <span className="ml-2 text-orange-600 font-semibold">
-                  · {nbAttente} en attente
-                </span>
-              )}
-            </p>
-          </div>
+        <div className="mb-4">
+          <h1 className="text-2xl font-extrabold text-slate-900">
+            {estAdmin ? 'Gestion des emprunts' : 'Mes emprunts'}
+          </h1>
+          <p className="text-slate-500 text-sm mt-1">
+            {filtres.length} emprunt{filtres.length > 1 ? 's' : ''}
+            {estAdmin && nbAttente > 0 && (
+              <span className="ml-2 text-orange-600 font-semibold">
+                · {nbAttente} en attente
+              </span>
+            )}
+          </p>
+        </div>
+
+        {/* Barre de filtres unifiée */}
+        <div className="flex flex-wrap gap-2">
           <select
             value={filtreStatut}
             onChange={e => setFiltreStatut(e.target.value)}
-            className="px-3 py-2.5 rounded-xl border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm bg-white cursor-pointer flex-shrink-0"
+            className="px-3 py-2 rounded-xl border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm bg-white cursor-pointer"
           >
             <option value="">Tous les statuts</option>
             <option value="en_attente">En attente</option>
@@ -181,34 +183,36 @@ export default function Emprunts() {
             <option value="refuse">Refusé</option>
             <option value="accepte">Accepté</option>
           </select>
+
+          {estAdmin && (
+            <>
+              <div className="flex items-center gap-2 flex-wrap">
+                <FiCalendar size={13} className="text-slate-400 flex-shrink-0" />
+                <input
+                  type="date"
+                  value={filtreDateDu}
+                  onChange={e => setFiltreDateDu(e.target.value)}
+                  className="px-3 py-2 rounded-xl border border-slate-200 text-slate-700 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer"
+                />
+                <span className="text-xs text-slate-400">→</span>
+                <input
+                  type="date"
+                  value={filtreDateAu}
+                  onChange={e => setFiltreDateAu(e.target.value)}
+                  className="px-3 py-2 rounded-xl border border-slate-200 text-slate-700 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer"
+                />
+              </div>
+              {(filtreDateDu || filtreDateAu || filtreStatut) && (
+                <button
+                  onClick={() => { setFiltreDateDu(''); setFiltreDateAu(''); setFiltreStatut('') }}
+                  className="px-3 py-2 rounded-xl text-xs text-slate-400 hover:text-red-500 hover:bg-red-50 border border-slate-200 transition cursor-pointer"
+                >
+                  Effacer tout
+                </button>
+              )}
+            </>
+          )}
         </div>
-        {estAdmin && (
-          <div className="flex items-center gap-3 flex-wrap">
-            <FiCalendar size={14} className="text-slate-400 flex-shrink-0" />
-            <span className="text-xs text-slate-500 font-medium">Filtrer par date de demande :</span>
-            <input
-              type="date"
-              value={filtreDateDu}
-              onChange={e => setFiltreDateDu(e.target.value)}
-              className="px-3 py-2 rounded-xl border border-slate-200 text-slate-700 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer"
-            />
-            <span className="text-xs text-slate-400">→</span>
-            <input
-              type="date"
-              value={filtreDateAu}
-              onChange={e => setFiltreDateAu(e.target.value)}
-              className="px-3 py-2 rounded-xl border border-slate-200 text-slate-700 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer"
-            />
-            {(filtreDateDu || filtreDateAu) && (
-              <button
-                onClick={() => { setFiltreDateDu(''); setFiltreDateAu('') }}
-                className="text-xs text-slate-400 hover:text-red-500 transition cursor-pointer"
-              >
-                Effacer
-              </button>
-            )}
-          </div>
-        )}
       </div>
 
       <div className="bg-white rounded-2xl border border-slate-100 shadow overflow-hidden">
