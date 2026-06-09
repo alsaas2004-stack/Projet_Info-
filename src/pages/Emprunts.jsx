@@ -231,108 +231,156 @@ export default function Emprunts() {
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-slate-100 bg-slate-50">
-                  <th className="text-left px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Matériel</th>
-                  {estAdmin && <th className="text-left px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Étudiant</th>}
-                  <th className="text-left px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Qté</th>
-                  <th className="text-left px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Demande</th>
-                  <th className="text-left px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Retour prévu</th>
-                  <th className="text-left px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Statut</th>
-                  {estAdmin && <th className="px-6 py-3.5 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {filtres.map(e => {
-                  const enRetard = e.statut === 'en_cours' && e.date_retour_prevue && new Date(e.date_retour_prevue) < new Date()
-                  return (
-                    <tr key={e.id_emprunt} className={`hover:bg-slate-50/50 transition-colors ${enRetard ? 'bg-red-50/40' : ''}`}>
-                      <td className="px-6 py-4">
-                        <Link to={`/materiels/${e.id_materiel}`} className="text-sm font-semibold text-slate-800 hover:text-orange-500 transition">
+          <>
+            {/* ── Cartes mobile ── */}
+            <div className="sm:hidden divide-y divide-slate-50">
+              {filtres.map(e => {
+                const enRetard = e.statut === 'en_cours' && e.date_retour_prevue && new Date(e.date_retour_prevue) < new Date()
+                return (
+                  <div key={e.id_emprunt} className={`p-4 ${enRetard ? 'bg-red-50/40' : ''}`}>
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <div className="min-w-0">
+                        <Link to={`/materiels/${e.id_materiel}`} className="text-sm font-semibold text-slate-800 hover:text-orange-500 transition block truncate">
                           {e.materiel?.nom}
                         </Link>
+                        {estAdmin && <p className="text-xs text-slate-500 mt-0.5">{e.utilisateur?.nom}</p>}
                         {enRetard && (
                           <p className="flex items-center gap-1 text-xs text-red-600 font-semibold mt-0.5">
                             <FiAlertTriangle size={11} /> En retard
                           </p>
                         )}
-                      </td>
-                      {estAdmin && (
-                        <td className="px-6 py-4">
-                          <p className="text-sm text-slate-700 font-medium">{e.utilisateur?.nom}</p>
-                          <p className="text-xs text-slate-400">{e.utilisateur?.email}</p>
-                        </td>
+                      </div>
+                      <BadgeStatut statut={e.statut} />
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-slate-400 mb-3">
+                      {(e.quantite || 1) > 1 && <span>Qté : {e.quantite}</span>}
+                      <span>{new Date(e.date_emprunt).toLocaleDateString('fr-FR')}</span>
+                      {e.date_retour_prevue && (
+                        <span className={enRetard ? 'text-red-500 font-semibold' : ''}>
+                          → {new Date(e.date_retour_prevue).toLocaleDateString('fr-FR')}
+                        </span>
                       )}
-                      <td className="px-6 py-4">
-                        <span className="text-sm font-semibold text-slate-700">{e.quantite || 1}</span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-slate-500">
-                        {new Date(e.date_emprunt).toLocaleDateString('fr-FR')}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-slate-500">
-                        {e.date_retour_prevue
-                          ? new Date(e.date_retour_prevue).toLocaleDateString('fr-FR')
-                          : <span className="text-slate-300">—</span>
-                        }
-                      </td>
-                      <td className="px-6 py-4">
-                        <BadgeStatut statut={e.statut} />
-                        {e.motif_refus && (
-                          <p className="text-xs text-slate-400 mt-1 max-w-40 truncate" title={e.motif_refus}>
-                            {e.motif_refus}
-                          </p>
+                    </div>
+                    {e.motif_refus && (
+                      <p className="text-xs text-slate-400 mb-2 italic">{e.motif_refus}</p>
+                    )}
+                    {estAdmin && (
+                      <div className="flex gap-2 flex-wrap">
+                        {e.statut === 'en_attente' && (
+                          <>
+                            <button onClick={() => accepter(e)} disabled={!!actionLoading}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-green-700 bg-green-50 hover:bg-green-100 transition cursor-pointer disabled:opacity-50">
+                              {actionLoading === e.id_emprunt ? <FiLoader size={12} className="animate-spin" /> : <FiCheck size={12} />}
+                              Accepter
+                            </button>
+                            <button onClick={() => { setEmpruntARefuser(e); setShowRefus(true) }} disabled={!!actionLoading}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-red-700 bg-red-50 hover:bg-red-100 transition cursor-pointer disabled:opacity-50">
+                              <FiX size={12} /> Refuser
+                            </button>
+                          </>
                         )}
-                      </td>
-                      {estAdmin && (
+                        {e.statut === 'en_cours' && (
+                          <button onClick={() => enregistrerRetour(e)} disabled={!!actionLoading}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition cursor-pointer disabled:opacity-50">
+                            {actionLoading === e.id_emprunt ? <FiLoader size={12} className="animate-spin" /> : <FiRotateCcw size={12} />}
+                            Retour enregistré
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* ── Tableau desktop ── */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-slate-100 bg-slate-50">
+                    <th className="text-left px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Matériel</th>
+                    {estAdmin && <th className="text-left px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Étudiant</th>}
+                    <th className="text-left px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Qté</th>
+                    <th className="text-left px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Demande</th>
+                    <th className="text-left px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Retour prévu</th>
+                    <th className="text-left px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Statut</th>
+                    {estAdmin && <th className="px-6 py-3.5 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {filtres.map(e => {
+                    const enRetard = e.statut === 'en_cours' && e.date_retour_prevue && new Date(e.date_retour_prevue) < new Date()
+                    return (
+                      <tr key={e.id_emprunt} className={`hover:bg-slate-50/50 transition-colors ${enRetard ? 'bg-red-50/40' : ''}`}>
                         <td className="px-6 py-4">
-                          <div className="flex items-center gap-2 justify-end">
-                            {e.statut === 'en_attente' && (
-                              <>
-                                <button
-                                  onClick={() => accepter(e)}
-                                  disabled={!!actionLoading}
-                                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-green-700 bg-green-50 hover:bg-green-100 transition cursor-pointer disabled:opacity-50"
-                                >
-                                  {actionLoading === e.id_emprunt
-                                    ? <FiLoader size={12} className="animate-spin" />
-                                    : <FiCheck size={12} />
-                                  }
-                                  Accepter
-                                </button>
-                                <button
-                                  onClick={() => { setEmpruntARefuser(e); setShowRefus(true) }}
-                                  disabled={!!actionLoading}
-                                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-red-700 bg-red-50 hover:bg-red-100 transition cursor-pointer disabled:opacity-50"
-                                >
-                                  <FiX size={12} />
-                                  Refuser
-                                </button>
-                              </>
-                            )}
-                            {e.statut === 'en_cours' && (
-                              <button
-                                onClick={() => enregistrerRetour(e)}
-                                disabled={!!actionLoading}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition cursor-pointer disabled:opacity-50"
-                              >
-                                {actionLoading === e.id_emprunt
-                                  ? <FiLoader size={12} className="animate-spin" />
-                                  : <FiRotateCcw size={12} />
-                                }
-                                Retour enregistré
-                              </button>
-                            )}
-                          </div>
+                          <Link to={`/materiels/${e.id_materiel}`} className="text-sm font-semibold text-slate-800 hover:text-orange-500 transition">
+                            {e.materiel?.nom}
+                          </Link>
+                          {enRetard && (
+                            <p className="flex items-center gap-1 text-xs text-red-600 font-semibold mt-0.5">
+                              <FiAlertTriangle size={11} /> En retard
+                            </p>
+                          )}
                         </td>
-                      )}
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
+                        {estAdmin && (
+                          <td className="px-6 py-4">
+                            <p className="text-sm text-slate-700 font-medium">{e.utilisateur?.nom}</p>
+                            <p className="text-xs text-slate-400">{e.utilisateur?.email}</p>
+                          </td>
+                        )}
+                        <td className="px-6 py-4">
+                          <span className="text-sm font-semibold text-slate-700">{e.quantite || 1}</span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-slate-500">
+                          {new Date(e.date_emprunt).toLocaleDateString('fr-FR')}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-slate-500">
+                          {e.date_retour_prevue
+                            ? new Date(e.date_retour_prevue).toLocaleDateString('fr-FR')
+                            : <span className="text-slate-300">—</span>
+                          }
+                        </td>
+                        <td className="px-6 py-4">
+                          <BadgeStatut statut={e.statut} />
+                          {e.motif_refus && (
+                            <p className="text-xs text-slate-400 mt-1 max-w-40 truncate" title={e.motif_refus}>
+                              {e.motif_refus}
+                            </p>
+                          )}
+                        </td>
+                        {estAdmin && (
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-2 justify-end">
+                              {e.statut === 'en_attente' && (
+                                <>
+                                  <button onClick={() => accepter(e)} disabled={!!actionLoading}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-green-700 bg-green-50 hover:bg-green-100 transition cursor-pointer disabled:opacity-50">
+                                    {actionLoading === e.id_emprunt ? <FiLoader size={12} className="animate-spin" /> : <FiCheck size={12} />}
+                                    Accepter
+                                  </button>
+                                  <button onClick={() => { setEmpruntARefuser(e); setShowRefus(true) }} disabled={!!actionLoading}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-red-700 bg-red-50 hover:bg-red-100 transition cursor-pointer disabled:opacity-50">
+                                    <FiX size={12} /> Refuser
+                                  </button>
+                                </>
+                              )}
+                              {e.statut === 'en_cours' && (
+                                <button onClick={() => enregistrerRetour(e)} disabled={!!actionLoading}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition cursor-pointer disabled:opacity-50">
+                                  {actionLoading === e.id_emprunt ? <FiLoader size={12} className="animate-spin" /> : <FiRotateCcw size={12} />}
+                                  Retour enregistré
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 
