@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
 import {
   FiBox, FiLoader, FiArrowLeft, FiEdit2, FiEyeOff,
-  FiClipboard, FiCalendar, FiX, FiCheck, FiPrinter, FiTag, FiShoppingCart
+  FiClipboard, FiCalendar, FiX, FiCheck, FiPrinter, FiTag, FiShoppingCart, FiPackage
 } from 'react-icons/fi'
 
 function BadgeEtat({ etat }) {
@@ -51,6 +51,7 @@ export default function DetailMateriel() {
   const [dateRetourPrevue, setDateRetourPrevue] = useState('')
   const [quantite, setQuantite] = useState(1)
   const [ajouteAuPanier, setAjouteAuPanier] = useState(false)
+  const [composants, setComposants] = useState([])
 
   useEffect(() => { charger() }, [id])
 
@@ -69,6 +70,13 @@ export default function DetailMateriel() {
     ])
     setMateriel(mat)
     setEmprunts(emps || [])
+    if (mat?.is_kit) {
+      const { data: comps } = await supabase
+        .from('kit_composant')
+        .select('quantite, composant:id_composant(id_materiel, nom, stock, etat)')
+        .eq('id_kit', id)
+      setComposants(comps || [])
+    }
     setLoading(false)
   }
 
@@ -140,12 +148,19 @@ export default function DetailMateriel() {
                 <BadgeEtat etat={materiel.etat} />
               </div>
 
-              {materiel.categorie && (
-                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-orange-600 bg-orange-50 px-3 py-1 rounded-full mb-4">
-                  <FiTag size={11} />
-                  {materiel.categorie.nom_categorie}
-                </span>
-              )}
+              <div className="flex flex-wrap gap-2 mb-4">
+                {materiel.is_kit && (
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-700 bg-blue-100 px-3 py-1 rounded-full">
+                    <FiPackage size={11} /> Kit
+                  </span>
+                )}
+                {materiel.categorie && (
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-orange-600 bg-orange-50 px-3 py-1 rounded-full">
+                    <FiTag size={11} />
+                    {materiel.categorie.nom_categorie}
+                  </span>
+                )}
+              </div>
 
               {materiel.description && (
                 <p className="text-sm text-slate-600 leading-relaxed mb-4">{materiel.description}</p>
@@ -156,6 +171,34 @@ export default function DetailMateriel() {
                   <FiCalendar size={12} />
                   Acquis le {new Date(materiel.date_acquisition).toLocaleDateString('fr-FR')}
                 </p>
+              )}
+
+              {/* Composants du kit */}
+              {materiel.is_kit && composants.length > 0 && (
+                <div className="mb-4 bg-blue-50 border border-blue-100 rounded-xl p-4">
+                  <p className="text-xs font-bold text-blue-700 mb-2 flex items-center gap-1.5">
+                    <FiPackage size={12} /> Composants inclus dans ce kit
+                  </p>
+                  <div className="space-y-1.5">
+                    {composants.map(c => (
+                      <div key={c.composant.id_materiel} className="flex items-center justify-between">
+                        <span className="text-sm text-slate-700">{c.composant.nom}{c.quantite > 1 && <span className="text-slate-400 ml-1">×{c.quantite}</span>}</span>
+                        <div className="flex items-center gap-2">
+                          {estAdmin && (
+                            <span className={`text-xs font-semibold ${(c.composant.stock ?? 0) === 0 ? 'text-red-500' : 'text-slate-400'}`}>
+                              Stock : {c.composant.stock ?? 0}
+                            </span>
+                          )}
+                          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                            c.composant.etat === 'disponible' ? 'bg-green-100 text-green-700' :
+                            c.composant.etat === 'en_attente' ? 'bg-yellow-100 text-yellow-700' :
+                            'bg-red-100 text-red-700'
+                          }`}>{c.composant.etat === 'disponible' ? 'Dispo' : c.composant.etat === 'en_attente' ? 'En attente' : 'Indispo'}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
 
               {/* Stock (admin) */}

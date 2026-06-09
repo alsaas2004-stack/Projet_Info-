@@ -166,11 +166,18 @@ export default function Materiels() {
               <div className="p-4 flex flex-col flex-1">
                 <p className="font-semibold text-slate-800 text-sm leading-snug">{m.nom}</p>
                 {m.reference && <p className="text-xs text-slate-400 mt-0.5">Réf. {m.reference}</p>}
-                {m.categorie && (
-                  <span className="text-xs text-orange-600 font-medium mt-2 bg-orange-50 inline-block px-2 py-0.5 rounded-full self-start">
-                    {m.categorie.nom_categorie}
-                  </span>
-                )}
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {m.is_kit && (
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
+                      Kit
+                    </span>
+                  )}
+                  {m.categorie && (
+                    <span className="text-xs text-orange-600 font-medium bg-orange-50 px-2 py-0.5 rounded-full">
+                      {m.categorie.nom_categorie}
+                    </span>
+                  )}
+                </div>
                 {estAdmin && (
                   <span className={`text-xs font-semibold mt-1 self-start ${
                     (m.stock ?? 1) === 0 ? 'text-red-500' : (m.stock ?? 1) <= 3 ? 'text-orange-500' : 'text-slate-400'

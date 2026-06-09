@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
-import { FiLoader, FiArrowLeft, FiSave } from 'react-icons/fi'
+import { FiLoader, FiArrowLeft, FiSave, FiPackage, FiPlus, FiTrash2 } from 'react-icons/fi'
 
 export default function NouveauMateriel() {
   const { id } = useParams()
@@ -11,6 +11,7 @@ export default function NouveauMateriel() {
   const navigate = useNavigate()
 
   const [categories, setCategories] = useState([])
+  const [tousMateriels, setTousMateriels] = useState([])
   const [loading, setLoading] = useState(estEdition)
   const [saving, setSaving] = useState(false)
 
@@ -22,15 +23,28 @@ export default function NouveauMateriel() {
   const [imageUrl, setImageUrl] = useState('')
   const [dateAcquisition, setDateAcquisition] = useState('')
   const [idCategorie, setIdCategorie] = useState('')
+  const [isKit, setIsKit] = useState(false)
+  const [composants, setComposants] = useState([])
+  const [composantSelecteur, setComposantSelecteur] = useState('')
 
   useEffect(() => {
     chargerCategories()
+    chargerTousMateriels()
     if (estEdition) chargerMateriel()
   }, [id])
 
   async function chargerCategories() {
     const { data } = await supabase.from('categorie').select('*').order('nom_categorie')
     setCategories(data || [])
+  }
+
+  async function chargerTousMateriels() {
+    const { data } = await supabase.from('materiel')
+      .select('id_materiel, nom')
+      .eq('actif', true)
+      .eq('is_kit', false)
+      .order('nom')
+    setTousMateriels(data || [])
   }
 
   async function chargerMateriel() {
@@ -44,8 +58,37 @@ export default function NouveauMateriel() {
       setDateAcquisition(data.date_acquisition ? data.date_acquisition.split('T')[0] : '')
       setIdCategorie(data.id_categorie || '')
       setStock(data.stock ?? 1)
+      setIsKit(data.is_kit || false)
+      if (data.is_kit) {
+        const { data: comps } = await supabase
+          .from('kit_composant')
+          .select('quantite, materiel:id_composant(id_materiel, nom)')
+          .eq('id_kit', id)
+        setComposants(comps?.map(c => ({
+          id_materiel: c.materiel.id_materiel,
+          nom: c.materiel.nom,
+          quantite: c.quantite,
+        })) || [])
+      }
     }
     setLoading(false)
+  }
+
+  function ajouterComposant() {
+    if (!composantSelecteur) return
+    if (composants.find(c => c.id_materiel === composantSelecteur)) return
+    const mat = tousMateriels.find(m => m.id_materiel === composantSelecteur)
+    if (!mat) return
+    setComposants(prev => [...prev, { id_materiel: mat.id_materiel, nom: mat.nom, quantite: 1 }])
+    setComposantSelecteur('')
+  }
+
+  function retirerComposant(idComp) {
+    setComposants(prev => prev.filter(c => c.id_materiel !== idComp))
+  }
+
+  function changerQuantiteComposant(idComp, q) {
+    setComposants(prev => prev.map(c => c.id_materiel === idComp ? { ...c, quantite: Math.max(1, q) } : c))
   }
 
   async function handleSubmit(e) {
@@ -62,19 +105,32 @@ export default function NouveauMateriel() {
       image_url: imageUrl.trim() || null,
       date_acquisition: dateAcquisition || null,
       id_categorie: idCategorie || null,
+      is_kit: isKit,
     }
+
+    let materielId = id
 
     if (estEdition) {
       await supabase.from('materiel').update(payload).eq('id_materiel', id)
     } else {
       const { data: inserted } = await supabase.from('materiel').insert(payload).select().single()
       if (inserted) {
+        materielId = inserted.id_materiel
         await supabase.from('historique').insert({
           type_action: 'creation',
           commentaire: `Création du matériel : ${inserted.nom}`,
           id_materiel: inserted.id_materiel,
           id_utilisateur: profil.id_utilisateur,
         })
+      }
+    }
+
+    if (isKit && materielId) {
+      await supabase.from('kit_composant').delete().eq('id_kit', materielId)
+      if (composants.length > 0) {
+        await supabase.from('kit_composant').insert(
+          composants.map(c => ({ id_kit: materielId, id_composant: c.id_materiel, quantite: c.quantite }))
+        )
       }
     }
 
@@ -91,6 +147,8 @@ export default function NouveauMateriel() {
       <FiLoader size={32} className="animate-spin text-orange-400" />
     </div>
   )
+
+  const composantsDisponibles = tousMateriels.filter(m => !composants.find(c => c.id_materiel === m.id_materiel))
 
   return (
     <div className="p-4 sm:p-8">
@@ -112,25 +170,23 @@ export default function NouveauMateriel() {
       </div>
 
       <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-slate-100 shadow p-6 space-y-5 max-w-2xl">
+
+        {/* Nom */}
         <div>
           <label className="block text-sm font-semibold text-slate-700 mb-1.5">Nom *</label>
           <input
-            type="text"
-            value={nom}
-            onChange={e => setNom(e.target.value)}
-            required
+            type="text" value={nom} onChange={e => setNom(e.target.value)} required
             placeholder="Ex : Arduino Uno"
             className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm bg-slate-50"
           />
         </div>
 
+        {/* Référence + Catégorie */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-1.5">Référence</label>
             <input
-              type="text"
-              value={reference}
-              onChange={e => setReference(e.target.value)}
+              type="text" value={reference} onChange={e => setReference(e.target.value)}
               placeholder="Ex : ARD-001"
               className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm bg-slate-50"
             />
@@ -138,8 +194,7 @@ export default function NouveauMateriel() {
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-1.5">Catégorie</label>
             <select
-              value={idCategorie}
-              onChange={e => setIdCategorie(e.target.value)}
+              value={idCategorie} onChange={e => setIdCategorie(e.target.value)}
               className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm bg-slate-50 cursor-pointer"
             >
               <option value="">Sans catégorie</option>
@@ -150,34 +205,30 @@ export default function NouveauMateriel() {
           </div>
         </div>
 
+        {/* Description */}
         <div>
           <label className="block text-sm font-semibold text-slate-700 mb-1.5">Description</label>
           <textarea
-            value={description}
-            onChange={e => setDescription(e.target.value)}
-            rows={3}
-            placeholder="Description optionnelle…"
+            value={description} onChange={e => setDescription(e.target.value)}
+            rows={3} placeholder="Description optionnelle…"
             className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm bg-slate-50 resize-none"
           />
         </div>
 
+        {/* Stock + État */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-1.5">Stock total</label>
             <input
-              type="number"
-              value={stock}
-              onChange={e => setStock(Math.max(0, parseInt(e.target.value) || 0))}
-              min={0}
+              type="number" value={stock} onChange={e => setStock(Math.max(0, parseInt(e.target.value) || 0))} min={0}
               className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm bg-slate-50"
             />
-            <p className="text-xs text-slate-400 mt-1">Nombre d'unités disponibles à l'emprunt</p>
+            <p className="text-xs text-slate-400 mt-1">Nombre d'unités disponibles</p>
           </div>
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-1.5">État</label>
             <select
-              value={etat}
-              onChange={e => setEtat(e.target.value)}
+              value={etat} onChange={e => setEtat(e.target.value)}
               className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm bg-slate-50 cursor-pointer"
             >
               <option value="disponible">Disponible</option>
@@ -186,24 +237,22 @@ export default function NouveauMateriel() {
           </div>
         </div>
 
+        {/* Date acquisition */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-1.5">Date d'acquisition</label>
             <input
-              type="date"
-              value={dateAcquisition}
-              onChange={e => setDateAcquisition(e.target.value)}
+              type="date" value={dateAcquisition} onChange={e => setDateAcquisition(e.target.value)}
               className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm bg-slate-50"
             />
           </div>
         </div>
 
+        {/* Image */}
         <div>
           <label className="block text-sm font-semibold text-slate-700 mb-1.5">URL de l'image</label>
           <input
-            type="url"
-            value={imageUrl}
-            onChange={e => setImageUrl(e.target.value)}
+            type="url" value={imageUrl} onChange={e => setImageUrl(e.target.value)}
             placeholder="https://…"
             className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm bg-slate-50"
           />
@@ -212,17 +261,98 @@ export default function NouveauMateriel() {
           )}
         </div>
 
+        {/* Toggle kit */}
+        <div className="border-t border-slate-100 pt-5">
+          <label className="flex items-center gap-3 cursor-pointer select-none">
+            <div
+              onClick={() => setIsKit(v => !v)}
+              className={`w-11 h-6 rounded-full flex items-center transition-colors ${isKit ? 'bg-orange-500' : 'bg-slate-200'}`}
+            >
+              <div className={`w-5 h-5 bg-white rounded-full shadow transition-transform mx-0.5 ${isKit ? 'translate-x-5' : 'translate-x-0'}`} />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-slate-700 flex items-center gap-1.5">
+                <FiPackage size={14} className="text-orange-500" />
+                C'est un kit
+              </p>
+              <p className="text-xs text-slate-400">Le stock des composants sera mis à jour automatiquement</p>
+            </div>
+          </label>
+        </div>
+
+        {/* Composition du kit */}
+        {isKit && (
+          <div className="bg-orange-50 border border-orange-100 rounded-2xl p-4 space-y-3">
+            <h3 className="text-sm font-bold text-slate-700">Composants du kit</h3>
+
+            {composants.length > 0 && (
+              <div className="space-y-2">
+                {composants.map(c => (
+                  <div key={c.id_materiel} className="flex items-center gap-3 bg-white rounded-xl px-3 py-2 border border-orange-100">
+                    <span className="flex-1 text-sm text-slate-700 font-medium truncate">{c.nom}</span>
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <span className="text-xs text-slate-400">Qté</span>
+                      <input
+                        type="number"
+                        value={c.quantite}
+                        onChange={e => changerQuantiteComposant(c.id_materiel, parseInt(e.target.value) || 1)}
+                        min={1}
+                        className="w-14 px-2 py-1 rounded-lg border border-slate-200 text-slate-900 text-sm text-center focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => retirerComposant(c.id_materiel)}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition cursor-pointer"
+                    >
+                      <FiTrash2 size={13} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {composantsDisponibles.length > 0 ? (
+              <div className="flex gap-2">
+                <select
+                  value={composantSelecteur}
+                  onChange={e => setComposantSelecteur(e.target.value)}
+                  className="flex-1 px-3 py-2 rounded-xl border border-orange-200 text-slate-700 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer"
+                >
+                  <option value="">Sélectionner un composant…</option>
+                  {composantsDisponibles.map(m => (
+                    <option key={m.id_materiel} value={m.id_materiel}>{m.nom}</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={ajouterComposant}
+                  disabled={!composantSelecteur}
+                  className="flex items-center gap-1.5 px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-xl transition cursor-pointer disabled:opacity-40"
+                >
+                  <FiPlus size={14} /> Ajouter
+                </button>
+              </div>
+            ) : (
+              <p className="text-xs text-slate-400">Tous les matériels disponibles ont été ajoutés.</p>
+            )}
+
+            {composants.length === 0 && (
+              <p className="text-xs text-orange-600">Ajoutez au moins un composant pour définir ce kit.</p>
+            )}
+          </div>
+        )}
+
+        {/* Boutons */}
         <div className="flex justify-end gap-3 pt-2">
           <button
-            type="button"
-            onClick={() => navigate(-1)}
+            type="button" onClick={() => navigate(-1)}
             className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50 transition cursor-pointer"
           >
             Annuler
           </button>
           <button
-            type="submit"
-            disabled={saving}
+            type="submit" disabled={saving}
             className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-bold px-6 py-2.5 rounded-xl text-sm transition shadow-lg shadow-orange-100 cursor-pointer disabled:opacity-60"
           >
             {saving ? <FiLoader size={15} className="animate-spin" /> : <FiSave size={15} />}
