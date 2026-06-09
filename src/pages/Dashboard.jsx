@@ -145,17 +145,16 @@ export default function Dashboard() {
           <StatCard icon={FiAlertTriangle}label="Indisponibles" value={stats.indisponible}         color="bg-red-500"    to="/materiels?etat=indisponible" />
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-          <StatCard icon={FiPackage}   label="Total matériels"   value={stats.total}      color="bg-slate-600"  to="/materiels" />
-          <StatCard icon={FiBox}       label="Disponibles"       value={stats.disponible} color="bg-green-500"  to="/materiels?etat=disponible" />
-          <StatCard icon={FiClipboard} label="En cours d'emprunt" value={stats.enCours}   color="bg-orange-500" to="/emprunts?statut=en_cours" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+          <StatCard icon={FiBox}       label="Disponibles à l'emprunt" value={stats.disponible} color="bg-green-500"  to="/materiels" />
+          <StatCard icon={FiClipboard} label="Mes emprunts en cours"    value={stats.enCours}   color="bg-orange-500" to="/emprunts?statut=en_cours" />
         </div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-        {/* Graphique répartition */}
-        {stats.total > 0 && (
+        {/* Graphique répartition (admin uniquement) */}
+        {estAdmin && stats.total > 0 && (
           <div className="bg-white rounded-2xl border border-slate-100 shadow p-6">
             <h2 className="text-sm font-bold text-slate-700 mb-4">Répartition des matériels</h2>
             <ResponsiveContainer width="100%" height={220}>

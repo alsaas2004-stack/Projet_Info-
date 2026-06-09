@@ -34,7 +34,8 @@ export function CartProvider({ children }) {
 
   function ajouterAuPanier(materiel, quantite = 1, dateRetourPrevue = null) {
     // Réserve le matériel en le passant "en attente" pendant 10 min
-    supabase.from('materiel').update({ etat: 'en_attente' }).eq('id_materiel', materiel.id_materiel).then()
+    supabase.from('materiel').update({ etat: 'en_attente' }).eq('id_materiel', materiel.id_materiel)
+      .then(({ error }) => { if (error) console.error('Erreur réservation matériel:', error.message) })
 
     const expiresAt = Date.now() + DUREE_RESERVATION_MS
 
@@ -61,7 +62,8 @@ export function CartProvider({ children }) {
 
   function retirerDuPanier(id) {
     // Libère la réservation
-    supabase.from('materiel').update({ etat: 'disponible' }).eq('id_materiel', id).then()
+    supabase.from('materiel').update({ etat: 'disponible' }).eq('id_materiel', id)
+      .then(({ error }) => { if (error) console.error('Erreur libération matériel:', error.message) })
     setPanier(prev => prev.filter(i => i.id_materiel !== id))
   }
 
