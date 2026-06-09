@@ -102,50 +102,34 @@ export default function Utilisateurs() {
             <p className="text-sm">Aucun utilisateur</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-slate-100 bg-slate-50">
-                <th className="text-left px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Utilisateur</th>
-                <th className="text-left px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Contact</th>
-                <th className="text-left px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Rôle</th>
-                <th className="text-left px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Statut</th>
-                <th className="px-6 py-3.5 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
+          <>
+            {/* ── Cartes mobile ── */}
+            <div className="sm:hidden divide-y divide-slate-50">
               {filtres.map(u => (
-                <tr key={u.id_utilisateur} className="hover:bg-slate-50/50 transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0 ${
-                        u.role === 'admin' ? 'bg-orange-100 text-orange-600' : 'bg-slate-100 text-slate-600'
-                      }`}>
-                        {u.nom.charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-slate-800 flex items-center gap-1.5">
-                          {u.nom}
-                          {u.id_utilisateur === profil.id_utilisateur && (
-                            <span className="text-xs font-medium text-slate-400">(vous)</span>
-                          )}
-                        </p>
-                      </div>
+                <div key={u.id_utilisateur} className="p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0 ${
+                      u.role === 'superadmin' ? 'bg-purple-100 text-purple-600' : u.role === 'admin' ? 'bg-orange-100 text-orange-600' : 'bg-slate-100 text-slate-600'
+                    }`}>
+                      {u.nom.charAt(0).toUpperCase()}
                     </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <p className="text-sm text-slate-600 flex items-center gap-1.5">
-                      <FiMail size={12} className="text-slate-400" />
-                      {u.email}
-                    </p>
-                    {u.telephone && (
-                      <p className="text-xs text-slate-400 flex items-center gap-1.5 mt-0.5">
-                        <FiPhone size={11} />
-                        {u.telephone}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-slate-800 truncate">
+                        {u.nom}
+                        {u.id_utilisateur === profil.id_utilisateur && (
+                          <span className="text-xs font-normal text-slate-400 ml-1">(vous)</span>
+                        )}
                       </p>
-                    )}
-                  </td>
-                  <td className="px-6 py-4">
+                      <p className="text-xs text-slate-400 truncate">{u.email}</p>
+                    </div>
+                    <span className={`flex-shrink-0 inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full ${
+                      u.actif ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'
+                    }`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${u.actif ? 'bg-green-500' : 'bg-slate-400'}`} />
+                      {u.actif ? 'Actif' : 'Désactivé'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
                     {estSuperAdmin && u.id_utilisateur !== profil.id_utilisateur && u.role !== 'superadmin' ? (
                       <div className="relative inline-block">
                         <select
@@ -162,37 +146,98 @@ export default function Utilisateurs() {
                     ) : (
                       <BadgeRole role={u.role} />
                     )}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${
-                      u.actif ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'
-                    }`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${u.actif ? 'bg-green-500' : 'bg-slate-400'}`} />
-                      {u.actif ? 'Actif' : 'Désactivé'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
                     {u.id_utilisateur !== profil.id_utilisateur && u.role !== 'superadmin' && (
                       <button
                         onClick={() => changerActif(u.id_utilisateur, u.actif)}
-                        className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
-                          u.actif
-                            ? 'text-red-600 hover:bg-red-50'
-                            : 'text-green-600 hover:bg-green-50'
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
+                          u.actif ? 'text-red-600 hover:bg-red-50' : 'text-green-600 hover:bg-green-50'
                         }`}
                       >
-                        {u.actif
-                          ? <><FiTrash2 size={15} /> Supprimer</>
-                          : <><FiToggleLeft size={15} /> Activer</>
-                        }
+                        {u.actif ? <><FiTrash2 size={13} /> Supprimer</> : <><FiToggleLeft size={13} /> Activer</>}
                       </button>
                     )}
-                  </td>
-                </tr>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
-          </div>
+            </div>
+
+            {/* ── Tableau desktop ── */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-slate-100 bg-slate-50">
+                    <th className="text-left px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Utilisateur</th>
+                    <th className="text-left px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Contact</th>
+                    <th className="text-left px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Rôle</th>
+                    <th className="text-left px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Statut</th>
+                    <th className="px-6 py-3.5 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {filtres.map(u => (
+                    <tr key={u.id_utilisateur} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0 ${
+                            u.role === 'admin' ? 'bg-orange-100 text-orange-600' : 'bg-slate-100 text-slate-600'
+                          }`}>
+                            {u.nom.charAt(0).toUpperCase()}
+                          </div>
+                          <p className="text-sm font-semibold text-slate-800 flex items-center gap-1.5">
+                            {u.nom}
+                            {u.id_utilisateur === profil.id_utilisateur && (
+                              <span className="text-xs font-medium text-slate-400">(vous)</span>
+                            )}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className="text-sm text-slate-600 flex items-center gap-1.5">
+                          <FiMail size={12} className="text-slate-400" />{u.email}
+                        </p>
+                        {u.telephone && (
+                          <p className="text-xs text-slate-400 flex items-center gap-1.5 mt-0.5">
+                            <FiPhone size={11} />{u.telephone}
+                          </p>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        {estSuperAdmin && u.id_utilisateur !== profil.id_utilisateur && u.role !== 'superadmin' ? (
+                          <div className="relative inline-block">
+                            <select value={u.role} onChange={e => changerRole(u.id_utilisateur, e.target.value)}
+                              className="appearance-none pl-3 pr-7 py-1.5 rounded-full text-xs font-semibold border-0 focus:outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer bg-slate-100 text-slate-700">
+                              {ROLES_GERABLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                            </select>
+                            <FiChevronDown size={11} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                          </div>
+                        ) : (
+                          <BadgeRole role={u.role} />
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${
+                          u.actif ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'
+                        }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${u.actif ? 'bg-green-500' : 'bg-slate-400'}`} />
+                          {u.actif ? 'Actif' : 'Désactivé'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        {u.id_utilisateur !== profil.id_utilisateur && u.role !== 'superadmin' && (
+                          <button onClick={() => changerActif(u.id_utilisateur, u.actif)}
+                            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
+                              u.actif ? 'text-red-600 hover:bg-red-50' : 'text-green-600 hover:bg-green-50'
+                            }`}>
+                            {u.actif ? <><FiTrash2 size={15} /> Supprimer</> : <><FiToggleLeft size={15} /> Activer</>}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
     </div>
