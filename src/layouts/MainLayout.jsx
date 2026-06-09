@@ -78,12 +78,12 @@ export default function MainLayout() {
 
       {/* ── Barre mobile (hamburger) ── */}
       <div className="lg:hidden fixed top-0 inset-x-0 z-30 bg-slate-900 flex items-center justify-between px-4 py-3 shadow-lg">
-        <div className="flex items-center gap-2.5">
+        <NavLink to="/" className="flex items-center gap-2.5">
           <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
             <FiPackage size={16} className="text-white" />
           </div>
           <span className="text-white font-extrabold text-base tracking-tight">IcamTrack</span>
-        </div>
+        </NavLink>
         <button
           onClick={() => setMenuOuvert(o => !o)}
           className="p-2 rounded-xl text-white hover:bg-slate-800 transition cursor-pointer relative"
@@ -114,17 +114,19 @@ export default function MainLayout() {
         <div className="relative overflow-hidden bg-orange-500 px-5 py-4">
           <SidebarArcs />
           <div className="relative flex items-center gap-3">
-            <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm flex-shrink-0">
-              <FiPackage size={18} className="text-white" />
-            </div>
-            <div>
-              <div className="text-white font-extrabold text-lg leading-none tracking-tight">
-                IcamTrack
+            <NavLink to="/" onClick={fermerMenu} className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm flex-shrink-0">
+                <FiPackage size={18} className="text-white" />
               </div>
-              <div className="text-orange-100 text-xs mt-0.5 font-medium">
-                Gestion du matériel
+              <div>
+                <div className="text-white font-extrabold text-lg leading-none tracking-tight">
+                  IcamTrack
+                </div>
+                <div className="text-orange-100 text-xs mt-0.5 font-medium">
+                  Gestion du matériel
+                </div>
               </div>
-            </div>
+            </NavLink>
             <button
               onClick={fermerMenu}
               className="lg:hidden ml-auto p-1.5 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition cursor-pointer"
