@@ -34,7 +34,7 @@ export function CartProvider({ children }) {
 
   function ajouterAuPanier(materiel, quantite = 1, dateRetourPrevue = null) {
     // Réserve via SECURITY DEFINER (contourne RLS pour les étudiants)
-    supabase.rpc('reserver_materiel', { p_id_materiel: materiel.id_materiel })
+    supabase.rpc('reserver_materiel', { p_id_materiel: materiel.id_materiel, p_quantite: quantite })
       .then(({ error }) => { if (error) console.error('Erreur réservation matériel:', error.message) })
 
     const expiresAt = Date.now() + DUREE_RESERVATION_MS
@@ -68,6 +68,8 @@ export function CartProvider({ children }) {
 
   function modifierQuantite(id, quantite) {
     if (quantite < 1) return
+    supabase.rpc('reserver_materiel', { p_id_materiel: id, p_quantite: quantite })
+      .then(({ error }) => { if (error) console.error('Erreur réservation matériel:', error.message) })
     setPanier(prev => prev.map(i => i.id_materiel === id ? { ...i, quantite } : i))
   }
 
