@@ -54,11 +54,7 @@ export default function Panier() {
       return
     }
 
-    const { data: admins } = await supabase
-      .from('utilisateur')
-      .select('id_utilisateur')
-      .in('role', ['admin', 'superadmin'])
-      .eq('actif', true)
+    const { data: admins } = await supabase.rpc('get_admin_ids')
 
     if (admins?.length > 0 && emprunts?.length > 0) {
       const noms = panier.map(i => i.nom).join(', ')
