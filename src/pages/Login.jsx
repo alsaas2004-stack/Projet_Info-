@@ -77,8 +77,8 @@ export default function Login() {
     e.preventDefault()
     setErreur('')
 
-    if (!signupEmail.toLowerCase().endsWith('@icam.fr')) {
-      setErreur('Seules les adresses @icam.fr sont acceptées pour l\'inscription.')
+    if (!/@(\d{4}\.)?icam\.fr$/i.test(signupEmail)) {
+      setErreur('Seules les adresses @icam.fr ou @AAAA.icam.fr sont acceptées pour l\'inscription.')
       return
     }
 
