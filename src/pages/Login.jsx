@@ -51,8 +51,12 @@ export default function Login() {
     try {
       await login(email, password)
       navigate('/')
-    } catch {
-      setErreur('Email ou mot de passe incorrect.')
+    } catch (err) {
+      if (err?.message?.toLowerCase().includes('email not confirmed')) {
+        setErreur('Vérifie ta boîte mail et clique sur le lien de confirmation avant de te connecter.')
+      } else {
+        setErreur('Email ou mot de passe incorrect.')
+      }
     } finally {
       setLoading(false)
     }
