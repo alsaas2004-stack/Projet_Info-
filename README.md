@@ -1,16 +1,52 @@
-# React + Vite
+# IcamTrack
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Application web de gestion d'emprunts de matériel pédagogique — ICAM  
+**EC06-SNI-ProjInfo · Mai 2026**
 
-Currently, two official plugins are available:
+**Application en ligne :** https://icam-track.vercel.app
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## Stack technique
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Frontend :** React 18 + Vite + Tailwind CSS
+- **Backend :** Supabase (PostgreSQL + Auth + RLS)
+- **Déploiement :** Vercel (CD depuis GitHub `main`)
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Structure du dépôt
+
+```
+Projet_Info-/
+├── src/              # Code source React (pages, composants, contextes)
+├── BDD/              # Base de données
+│   ├── Schema.sql           # Script complet (tables, RLS, fonctions, trigger)
+│   └── *.png                # Capture du schéma Supabase
+├── docs/             # Documentation
+│   ├── Rapport.md           # Rapport de projet complet
+│   ├── Manuel_utilisation.md # Guide d'utilisation
+│   └── Backlog.md           # Backlog Agile
+├── public/           # Fichiers statiques
+├── package.json
+└── vercel.json
+```
+
+---
+
+## Lancer le projet en local
+
+```bash
+npm install
+cp .env.example .env   # puis renseigner les clés Supabase
+npm run dev
+```
+
+---
+
+## Documentation
+
+- [Rapport de projet](docs/Rapport.md)
+- [Manuel d'utilisation](docs/Manuel_utilisation.md)
+- [Backlog Agile](docs/Backlog.md)
+- [Schéma BDD](BDD/Schema.sql)
