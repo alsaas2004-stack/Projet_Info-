@@ -23,7 +23,7 @@ Projet_Info-/
 ├── BDD/              # Base de données
 │   ├── Schema.sql           # Script complet (tables, RLS, fonctions, trigger)
 │   └── *.png                # Capture du schéma Supabase
-├── docs/             # Documentation
+├── docs_technique/   # Documentation
 │   ├── Rapport.md           # Rapport de projet complet
 │   ├── Manuel_utilisation.md # Guide d'utilisation
 │   └── Backlog.md           # Backlog Agile
@@ -46,7 +46,7 @@ npm run dev
 
 ## Documentation
 
-- [Rapport de projet](docs/Rapport.md)
-- [Manuel d'utilisation](docs/Manuel_utilisation.md)
-- [Backlog Agile](docs/Backlog.md)
+- [Rapport de projet](docs_technique/Rapport.md)
+- [Manuel d'utilisation](docs_technique/Manuel_utilisation.md)
+- [Backlog Agile](docs_technique/Backlog.md)
 - [Schéma BDD](BDD/Schema.sql)
