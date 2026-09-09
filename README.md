@@ -3,7 +3,7 @@
 Application web de gestion d'emprunts de matériel pédagogique — ICAM  
 **EC06-SNI-ProjInfo · Mai 2026**
 
-**Application en ligne :** https://icam-track.vercel.app
+**Application en ligne :** https://projet-info-livid.vercel.app
 
 Les étudiants réservent et empruntent du matériel (y compris des kits composés de plusieurs éléments), les administrateurs valident ou refusent les demandes. Le stock et l'état du matériel (disponible / en attente / emprunté) sont mis à jour automatiquement selon le cycle de vie de l'emprunt, avec notifications et historique.
 
